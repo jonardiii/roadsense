@@ -1,0 +1,53 @@
+{% extends "app.html" %}
+{% block title %}Repeat plates | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Repeat plates</h1>
+  <p class="muted">Vehicles not registered to any driver that have two or more violations. Use this list at the exit.</p></div></div>
+
+<section class="panel">
+  <h2>Plates with repeat violations</h2>
+  {% if rows %}
+  <table>
+    <thead><tr><th>Plate</th><th>Violations</th><th>Speeding</th><th>Honking</th><th>Vehicle</th><th>First seen</th><th>Last seen</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td><span class="plate">{{ r.plate | plate }}</span></td>
+        <td class="num"><strong>{{ r.n }}</strong></td>
+        <td class="num">{{ r.speeding or 0 }}</td>
+        <td class="num">{{ r.honking or 0 }}</td>
+        <td>{{ (r.kind or '-') | capitalize }}</td>
+        <td>{{ r.first_at | dt }}</td>
+        <td>{{ r.last_at | dt }}</td>
+        <td><a href="{{ url_for('admin.violations', q=r.plate) }}">View records</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">No unregistered plate has repeated yet.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>Vehicles not identified yet</h2>
+  <p class="muted">The plate was not read. Open the record, check the photo and video, and enter the plate if you can see it.</p>
+  {% if unknown %}
+  <table>
+    <thead><tr><th>Record</th><th>Type</th><th>Vehicle</th><th>When</th></tr></thead>
+    <tbody>
+    {% for r in unknown %}
+      <tr>
+        <td><a href="{{ url_for('admin.violation_detail', vid=r.id) }}">{{ r.record_id }}</a></td>
+        <td>{{ r.type | label }}</td>
+        <td>{{ (r.vehicle_class or '-') | capitalize }}</td>
+        <td>{{ r.detected_at | dt }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">Nothing waiting.</p>
+  {% endif %}
+</section>
+{% endblock %}

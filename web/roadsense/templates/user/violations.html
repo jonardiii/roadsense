@@ -1,0 +1,38 @@
+{% extends "app.html" %}
+{% block title %}My violations | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>My violations</h1><p>Open a record to see the photo and send an appeal.</p></div>
+  <form method="get" class="filters" style="margin:0">
+    <div class="field"><label for="status">Show</label>
+      <select id="status" name="status" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for s in ('flagged', 'under_review', 'resolved', 'dismissed') %}
+          <option value="{{ s }}" {{ 'selected' if status == s }}>{{ s | label }}</option>
+        {% endfor %}
+      </select></div>
+    <noscript><button class="btn btn-sm" type="submit">Filter</button></noscript>
+  </form>
+</div>
+<section class="panel">
+  {% if rows %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Record</th><th>When</th><th>Type</th><th>Plate</th><th>Offense</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for v in rows %}
+        <tr>
+          <td><a href="{{ url_for('user.violation_detail', vid=v.id) }}">{{ v.record_id }}</a></td>
+          <td>{{ v.detected_at | dt }}</td>
+          <td>{{ v.type | label }}</td>
+          <td><span class="plate">{{ v.plate | plate }}</span></td>
+          <td>{{ ('#' ~ v.offense_no) if v.offense_no else '-' }}</td>
+          <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <p class="empty">{{ 'No violations match this filter.' if status else 'No violations on your record.' }}</p>
+  {% endif %}
+</section>
+{% endblock %}

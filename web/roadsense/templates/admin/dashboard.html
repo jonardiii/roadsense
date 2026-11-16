@@ -1,0 +1,54 @@
+{% extends "app.html" %}
+{% block title %}Dashboard | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Dashboard</h1><p>Violations recorded on campus, last 7 days.</p></div>
+  <div class="muted"><span class="dot {{ 'on' if beat }}"></span>{% if beat %}Detector last seen {{ beat | dt }}{% else %}Detector hasn't reported in yet{% endif %}</div>
+</div>
+
+<div class="stats">
+  <div class="stat zone"><div class="v num">{{ stats.today }}</div><div class="l">Violations today</div></div>
+  <div class="stat"><div class="v num">{{ stats.total }}</div><div class="l">Violations in total</div></div>
+  <div class="stat"><div class="v num">{{ stats.drivers }}</div><div class="l">Drivers listed</div></div>
+  <div class="stat {{ 'alert' if stats.appeals }}"><div class="v num">{{ stats.appeals }}</div><div class="l">Appeals waiting</div></div>
+  <div class="stat"><div class="v num">{{ stats.unmatched }}</div><div class="l">Plates not matched to a driver</div></div>
+  <div class="stat {{ 'alert' if stats.unverified }}"><div class="v num">{{ stats.unverified }}</div><div class="l">Plates to verify</div></div>
+</div>
+
+<div class="cols">
+  <section class="panel">
+    <h2>Violations per day</h2>
+    <div class="bars" role="img" aria-label="Violations per day for the last 7 days">
+      {% for d in chart %}
+        <div class="bar-col">
+          <span class="tot num">{{ d.total }}</span>
+          <div class="bar" style="height: {{ d.height }}%" title="{{ d.date }}: {{ d.speeding }} speeding, {{ d.honking }} honking">
+            <div class="s" style="height: {{ d.speeding_h }}%"></div>
+          </div>
+          <span class="muted">{{ d.day }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="legend"><span><i style="background: var(--asphalt)"></i>Speeding</span><span><i style="background: var(--zone)"></i>Honking</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Latest violations</h2>
+    {% if recent %}
+      <div class="table-wrap"><table>
+        <tbody>
+        {% for v in recent %}
+          <tr>
+            <td><a href="{{ url_for('admin.violation_detail', vid=v.id) }}">{{ v.type | label }}</a><br><span class="muted">{{ v.detected_at | dt }}</span></td>
+            <td>{% if v.plate %}<span class="plate">{{ v.plate | plate }}</span>{% else %}<span class="muted">No plate</span>{% endif %}</td>
+            <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+    {% else %}
+      <p class="empty">No violations yet. Records appear here as soon as the detector sends them.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "app.html" %}
+{% block title %}Settings | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Settings</h1><p>The detector reads the thresholds from here.</p></div></div>
+
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <section class="panel">
+    <h2>Detection thresholds</h2>
+    <div class="grid-2">
+      <div class="field"><label for="speed_limit">Speed limit (km/h)</label><input id="speed_limit" name="speed_limit" type="number" step="any" value="{{ s.speed_limit }}"></div>
+      <div class="field"><label for="honk_db">Horn level threshold (dB)</label><input id="honk_db" name="honk_db" type="number" step="any" value="{{ s.honk_db }}"></div>
+    </div>
+    <div class="field"><label for="honk_min_seconds">Shortest horn that counts (seconds)</label><input id="honk_min_seconds" name="honk_min_seconds" type="number" step="any" value="{{ s.honk_min_seconds }}"></div>
+  </section>
+
+  <section class="panel">
+    <h2>SMS alerts</h2>
+    <div class="field"><label for="sms_mode">Mode</label>
+      <select id="sms_mode" name="sms_mode">
+        <option value="off" {{ 'selected' if s.sms_mode == 'off' }}>Off</option>
+        <option value="log" {{ 'selected' if s.sms_mode == 'log' }}>Test: write messages to the log, don't send</option>
+        <option value="live" {{ 'selected' if s.sms_mode == 'live' }}>Live: send through Semaphore</option>
+      </select></div>
+    <div class="grid-2">
+      <div class="field"><label for="semaphore_api_key">Semaphore API key <span class="hint">{{ '(a key is saved; leave blank to keep it)' if s.has_semaphore_key else '(not set)' }}</span></label>
+        <input id="semaphore_api_key" name="semaphore_api_key" type="password" autocomplete="off"></div>
+      <div class="field"><label for="semaphore_sender">Sender name <span class="hint">(optional, up to 11 characters)</span></label>
+        <input id="semaphore_sender" name="semaphore_sender" type="text" maxlength="11" value="{{ s.semaphore_sender }}"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Review and live feed</h2>
+    <div class="field"><label for="stream_url">Live feed address <span class="hint">(from the detector, like http://localhost:5001/video_feed)</span></label>
+      <input id="stream_url" name="stream_url" type="url" value="{{ s.stream_url }}"></div>
+    <label class="check"><input type="checkbox" name="horn_needs_review" {{ 'checked' if s.horn_needs_review == '1' }}>
+      <span>Hold horn records for review. The driver is texted only after an administrator watches the clip and confirms it. One microphone cannot tell which vehicle honked, so keep this on.</span></label>
+    <label class="check"><input type="checkbox" name="allow_direct_review" {{ 'checked' if s.allow_direct_review == '1' }}>
+      <span>Let administrators close or dismiss a violation before the driver sends an appeal. Leave this off to follow the campus procedure, where only appealed violations are reviewed.</span></label>
+  </section>
+  <button class="btn" type="submit">Save settings</button>
+</form>
+
+<section class="panel" style="margin-top:1.25rem">
+  <h2>Detector API key</h2>
+  <p>Put this key in the detector program so it can send violations to this system.</p>
+  <p><code>{{ s.api_key }}</code></p>
+  <form method="post" action="{{ url_for('admin.regenerate_key') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-ghost btn-sm" type="submit">Create a new key</button>
+  </form>
+</section>
+{% endblock %}

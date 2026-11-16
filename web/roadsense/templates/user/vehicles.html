@@ -1,0 +1,40 @@
+{% extends "app.html" %}
+{% block title %}My vehicles | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My vehicles</h1><p>The Security Services office verifies each plate before violations are linked to you.</p></div></div>
+
+<section class="panel">
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Plate</th><th>Type</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for v in rows %}
+      <tr>
+        <td><span class="plate">{{ v.plate | plate }}</span></td>
+        <td>{{ v.vehicle_type | capitalize }}</td>
+        <td>{% if v.verified %}<span class="chip chip-ok">Verified</span>{% else %}<span class="chip chip-under_review">Waiting for verification</span>{% endif %}</td>
+        <td>{% if not v.verified %}
+          <form class="inline" method="post" action="{{ url_for('user.remove_vehicle', vid=v.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm" type="submit">Remove</button>
+          </form>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">You haven't added a plate yet.</p>{% endif %}
+</section>
+
+<section class="panel">
+  <h2>Add a plate</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid-2">
+      <div class="field"><label for="plate">Plate number</label><input id="plate" name="plate" type="text" placeholder="ABC 1234" required></div>
+      <div class="field"><label for="vehicle_type">Vehicle type</label>
+        <select id="vehicle_type" name="vehicle_type"><option value="car">Car</option><option value="motorcycle">Motorcycle</option><option value="other">Other</option></select></div>
+    </div>
+    <button class="btn" type="submit">Add plate</button>
+  </form>
+</section>
+{% endblock %}

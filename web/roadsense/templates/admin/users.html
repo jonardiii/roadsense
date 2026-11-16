@@ -1,0 +1,28 @@
+{% extends "app.html" %}
+{% block title %}Drivers | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Drivers</h1><p>Everyone with an account.</p></div></div>
+<section class="panel">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Gate pass</th><th class="r">Vehicles</th><th class="r">Violations</th><th>Account</th><th></th></tr></thead>
+    <tbody>
+    {% for u in rows %}
+      <tr>
+        <td>{{ u.full_name }}{% if u.role == 'admin' %} <span class="chip chip-resolved">Admin</span>{% endif %}</td>
+        <td>{{ u.email }}</td>
+        <td class="num">{{ u.phone or '-' }}</td>
+        <td>{{ u.gate_pass_no or '-' }}</td>
+        <td class="r num">{{ u.vehicles }}</td>
+        <td class="r num">{{ u.violations }}</td>
+        <td>{% if u.active %}<span class="chip chip-ok">Active</span>{% else %}<span class="chip chip-dismissed">Deactivated</span>{% endif %}</td>
+        <td>{% if u.id != g.user.id %}
+          <form class="inline" method="post" action="{{ url_for('admin.toggle_user', uid=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm" type="submit">{{ 'Deactivate' if u.active else 'Reactivate' }}</button>
+          </form>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

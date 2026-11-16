@@ -1,0 +1,12 @@
+ultralytics>=8.3.0
+lapx>=0.5.5
+easyocr>=1.7.1
+opencv-python>=4.9
+numpy>=1.26
+sounddevice>=0.4.6
+scipy>=1.10
+requests>=2.31
+soundfile>=0.12   # horn_eval.py reads the sound datasets
+imageio-ffmpeg>=0.5   # video clips as evidence
+# optional second plate reader, try it with: python distance_test.py --ocr fastplate
+# fast-plate-ocr[onnx]>=1.0

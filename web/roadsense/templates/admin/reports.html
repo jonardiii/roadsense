@@ -1,0 +1,41 @@
+{% extends "app.html" %}
+{% block title %}Reports | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Reports</h1><p>Dismissed violations are left out of the totals.</p></div>
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.reports_csv', date_from=date_from, date_to=date_to) }}">Export CSV</a>
+</div>
+
+<form class="panel filters" method="get">
+  <div class="field"><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ date_from }}"></div>
+  <div class="field"><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ date_to }}"></div>
+  <button class="btn" type="submit">Show report</button>
+</form>
+
+<div class="stats">
+  <div class="stat zone"><div class="v num">{{ total }}</div><div class="l">Violations</div></div>
+  <div class="stat"><div class="v num">{{ by_type.get('speeding', 0) }}</div><div class="l">Speeding</div></div>
+  <div class="stat"><div class="v num">{{ by_type.get('honking', 0) }}</div><div class="l">Honking</div></div>
+</div>
+
+<div class="cols">
+  <section class="panel">
+    <h2>By day</h2>
+    {% if by_day %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th class="r">Speeding</th><th class="r">Honking</th></tr></thead>
+      <tbody>{% for d in by_day %}<tr><td>{{ d.day }}</td><td class="r num">{{ d.s }}</td><td class="r num">{{ d.h }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No violations in this date range.</p>{% endif %}
+  </section>
+  <section class="panel">
+    <h2>Plates with the most violations</h2>
+    {% if top %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Plate</th><th>Driver</th><th class="r">Count</th></tr></thead>
+      <tbody>{% for t in top %}<tr><td><span class="plate">{{ t.plate | plate }}</span></td><td>{{ t.full_name or 'Not registered' }}</td><td class="r num">{{ t.c }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No plates were read in this date range.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

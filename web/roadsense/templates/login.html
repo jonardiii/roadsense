@@ -1,0 +1,19 @@
+{% extends "public.html" %}
+{% block title %}Log in | RoadSense{% endblock %}
+{% block content %}
+<main class="auth-wrap">
+  <div class="auth-card">
+    <h1>Log in</h1>
+    {% include "_flash.html" %}
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{ email }}" autocomplete="username" required autofocus></div>
+      <div class="field"><label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn" type="submit">Log in</button>
+    </form>
+    <p class="auth-foot">New driver? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+  </div>
+</main>
+{% endblock %}

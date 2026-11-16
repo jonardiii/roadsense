@@ -1,0 +1,122 @@
+{% extends "app.html" %}
+{% block title %}{{ v.record_id }} | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ v.type | label }} violation</h1><p class="num">{{ v.record_id }} &middot; {{ v.detected_at | dt }}</p></div>
+  <span class="chip chip-{{ v.status }}">{{ v.status | label }}</span>
+</div>
+
+<div class="detail">
+  <section class="panel evidence">
+    <h2>Photo evidence</h2>
+    {% if v.image_path %}
+      <img class="zoomable" data-zoom="{{ url_for('admin.evidence', vid=v.id) }}" title="Click to zoom" src="{{ url_for('admin.evidence', vid=v.id) }}" alt="Captured image for {{ v.record_id }}">
+    {% else %}
+      <div class="noimg">No image was sent with this record.</div>
+    {% endif %}
+    {% if v.video_path %}
+      <h2 style="margin-top:1rem">Video clip</h2>
+      <video id="clip" controls preload="metadata" playsinline style="width:100%;border-radius:8px" src="{{ url_for('admin.clip', vid=v.id) }}"></video>
+      <button type="button" class="zoombtn" data-zoomvideo="clip">Enlarge / zoom video</button>
+      <p class="muted">About 10 seconds around the event. Use it when the photo is not clear.</p>
+    {% endif %}
+    {% if v.audio_path %}
+      <h2 style="margin-top:1rem">Sound from the microphone</h2>
+      <audio controls preload="metadata" style="width:100%" src="{{ url_for('admin.sound', vid=v.id) }}"></audio>
+      <p class="muted">The same 10 seconds, recorded by the external microphone only{% if v.type == 'honking' %}. Listen for the horn{% endif %}.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Details</h2>
+    <dl class="facts-list">
+      <dt>Plate</dt><dd>{% if v.plate %}<span class="plate">{{ v.plate | plate }}</span>{% if v.plate_confidence is not none %} <span class="muted">({{ (v.plate_confidence * 100) | round | int }}% read confidence)</span>{% endif %}{% else %}Not read{% endif %}</dd>
+      <dt>Vehicle</dt><dd>{{ (v.vehicle_class or 'Not identified') | capitalize }}</dd>
+      <dt>Driver</dt><dd>{% if v.user_id %}{{ v.full_name }}<br><span class="muted">{{ v.email }} &middot; {{ v.phone }}</span>{% else %}Not registered{% endif %}</dd>
+      {% if v.type == 'speeding' %}
+        <dt>Speed</dt><dd class="num">{{ '%.1f' | format(v.speed_kmh) }} km/h <span class="muted">(limit {{ '%g' | format(v.speed_limit) }})</span></dd>
+      {% elif v.db_level %}
+        <dt>Horn level</dt><dd class="num">{{ '%.1f' | format(v.db_level) }} dB</dd>
+      {% endif %}
+      {% if v.sound_note %}<dt>Sound heard</dt><dd>{{ v.sound_note }} <span class="muted">(sound model, score 0 to 1)</span></dd>{% endif %}
+      <dt>Offense</dt><dd>{{ ('#' ~ v.offense_no) if v.offense_no else '-' }}{% if v.offense_no and not v.plate %} <span class="muted">(plate not read yet, counted on its own)</span>{% elif v.offense_no and not v.user_id %} <span class="muted">(counted by plate, owner not registered)</span>{% endif %}</dd>
+      <dt>SMS</dt><dd>{{ (v.sms_status or 'Not sent') | replace('_', ' ') | capitalize }}</dd>
+    </dl>
+  </section>
+</div>
+
+{% if not v.plate %}
+<section class="panel">
+  <h2>Identify the vehicle</h2>
+  <p class="muted">The system could not read the plate. If you can see it in the photo or the video clip, enter it here. The record will then count under that plate, or under the driver if the plate is registered.</p>
+  <form method="post" action="{{ url_for('admin.set_plate', vid=v.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label for="plate">Plate number</label>
+      <input id="plate" name="plate" type="text" maxlength="12" placeholder="ABC 1234" required></div>
+    <button class="btn" type="submit">Set plate</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Appeals</h2>
+  {% if appeals %}
+    {% for a in appeals %}
+      <p><strong>{{ 'Letter of apology' if a.kind == 'apology' else 'Dispute' }}</strong> <span class="muted">sent {{ a.created_at | dt }}</span></p>
+      <div class="quote">{{ a.message }}</div>
+      {% if a.status == 'reviewed' %}
+        <p class="muted">Reviewed {{ a.reviewed_at | dt }}{% if a.admin_note %}. Note: {{ a.admin_note }}{% endif %}</p>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="muted">The driver hasn't sent an appeal.</p>
+  {% endif %}
+
+  {% if awaiting %}
+    <p class="muted">One microphone cannot tell which vehicle honked. Watch the clip with sound. If the vehicle marked in it really honked, confirm and the driver is texted. If the horn came from another vehicle, dismiss it.</p>
+    <form method="post" action="{{ url_for('admin.confirm_horn', vid=v.id) }}" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn" type="submit">Confirm horn{% if v.user_id %} and text the driver{% endif %}</button>
+    </form>
+  {% endif %}
+  {% if can_review %}
+    <form method="post" action="{{ url_for('admin.decide', vid=v.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="note">Note for the record <span class="hint">(optional)</span></label>
+        <input id="note" name="note" type="text" maxlength="500"></div>
+      <button class="btn" name="decision" value="resolved" type="submit">Close as resolved</button>
+      <button class="btn btn-danger" name="decision" value="dismissed" type="submit">Dismiss as a false detection</button>
+    </form>
+  {% elif v.status in ('flagged', 'under_review') %}
+    <p class="muted">You can review this violation once the driver sends an appeal.</p>
+  {% endif %}
+</section>
+
+{% if sms_rows %}
+<section class="panel">
+  <h2>SMS log</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Time</th><th>To</th><th>Status</th><th>Message</th></tr></thead>
+    <tbody>{% for s in sms_rows %}
+      <tr><td>{{ s.created_at | dt }}</td><td class="num">{{ s.phone }}</td><td>{{ s.status | capitalize }}{% if s.status in ('queued', 'failed') and s.detail %}<br><span class="muted">{{ s.detail }}</span>{% endif %}{% if s.attempts > 1 %}<br><span class="muted">{{ s.attempts }} attempts</span>{% endif %}</td><td>{{ s.message }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% if v.sms_status in ('queued', 'failed') %}
+  <form method="post" action="{{ url_for('admin.resend_sms', vid=v.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p class="muted">{% if v.sms_status == 'queued' %}Waiting for the internet. It is tried again every minute.{% else %}This text was not delivered.{% endif %}</p>
+    <button class="btn" type="submit">Send the text again now</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+<section class="panel">
+  <h2>Delete this record</h2>
+  <p class="muted">Removes this violation, its photo, its appeals and its text message log. This cannot be undone. Use it for test records or false detections you do not need to keep.</p>
+  <form method="post" action="{{ url_for('admin.delete_violation', vid=v.id) }}" onsubmit="return confirm('Delete this violation and its photo? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-danger" type="submit">Delete violation</button>
+  </form>
+</section>
+{% include "_zoom.html" %}
+{% endblock %}

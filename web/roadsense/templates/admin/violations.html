@@ -1,0 +1,66 @@
+{% extends "app.html" %}
+{% block title %}Violations | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Violations</h1><p>{{ total }} record{{ '' if total == 1 else 's' }} match.</p></div>
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.reports_csv', date_from=args.get('date_from'), date_to=args.get('date_to')) }}">Export CSV</a>
+</div>
+
+<form class="panel filters" method="get">
+  <div class="field"><label for="q">Plate</label><input id="q" name="q" type="text" value="{{ args.get('q', '') }}" placeholder="ABC1234"></div>
+  <div class="field"><label for="type">Type</label>
+    <select id="type" name="type"><option value="">All</option>
+      <option value="speeding" {{ 'selected' if args.get('type') == 'speeding' }}>Speeding</option>
+      <option value="honking" {{ 'selected' if args.get('type') == 'honking' }}>Honking</option></select></div>
+  <div class="field"><label for="status">Status</label>
+    <select id="status" name="status"><option value="">All</option>
+      {% for s in ('flagged', 'under_review', 'resolved', 'dismissed') %}
+        <option value="{{ s }}" {{ 'selected' if args.get('status') == s }}>{{ s | label }}</option>
+      {% endfor %}</select></div>
+  <div class="field"><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ args.get('date_from', '') }}"></div>
+  <div class="field"><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ args.get('date_to', '') }}"></div>
+  <button class="btn" type="submit">Filter</button>
+  <a class="btn btn-ghost" href="{{ url_for('admin.violations') }}">Clear</a>
+</form>
+
+<section class="panel">
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Record</th><th>Detected</th><th>Type</th><th>Vehicle</th><th>Plate</th><th>Driver</th><th>Reading</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for v in rows %}
+      <tr>
+        <td><a href="{{ url_for('admin.violation_detail', vid=v.id) }}">{{ v.record_id or v.id }}</a></td>
+        <td>{{ v.detected_at | dt }}</td>
+        <td>{{ v.type | label }}</td>
+        <td>{{ (v.vehicle_class or '-') | capitalize }}</td>
+        <td>{% if v.plate %}<span class="plate">{{ v.plate | plate }}</span>{% else %}<span class="muted">Not read</span>{% endif %}</td>
+        <td>{{ v.full_name or 'Not registered' }}</td>
+        <td class="num">{% if v.type == 'speeding' %}{{ '%.1f' | format(v.speed_kmh) }} km/h{% elif v.db_level %}{{ '%.1f' | format(v.db_level) }} dB{% else %}-{% endif %}</td>
+        <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <div class="pager">
+    {% if page > 1 %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin.violations', page=page - 1, **args) }}">Previous</a>{% endif %}
+    <span class="muted">Page {{ page }} of {{ pages }}</span>
+    {% if page < pages %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin.violations', page=page + 1, **args) }}">Next</a>{% endif %}
+  </div>
+  {% else %}
+    <p class="empty">No violations match these filters.</p>
+  {% endif %}
+</section>
+{% if total %}
+<section class="panel">
+  <h2>Delete records</h2>
+  <p class="muted">Deletes all {{ total }} record{{ '' if total == 1 else 's' }} that match the filters above, together with their photos, appeals and text message logs. Clear the filters first to delete everything. This cannot be undone. Use it to remove test data.</p>
+  <form method="post" action="{{ url_for('admin.delete_matching_violations') }}" onsubmit="return confirm('Delete {{ total }} violation(s) and their photos? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for k, val in args.items() %}<input type="hidden" name="{{ k }}" value="{{ val }}">{% endfor %}
+    <div class="field"><label for="confirm">Type DELETE to confirm</label><input id="confirm" name="confirm" type="text" autocomplete="off" placeholder="DELETE"></div>
+    <button class="btn btn-danger" type="submit">Delete {{ total }} record{{ '' if total == 1 else 's' }}</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

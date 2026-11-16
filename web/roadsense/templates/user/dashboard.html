@@ -1,0 +1,39 @@
+{% extends "app.html" %}
+{% block title %}Dashboard | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Hello, {{ g.user.full_name.split(' ')[0] }}</h1><p>Your record at the BukSU campus gate.</p></div></div>
+
+{% if unverified %}
+  <div class="step">Your plate {{ unverified | map(attribute='plate') | join(', ') }} is waiting for the Security Services office to verify it. Violations show up here after that.</div>
+{% elif not has_vehicle %}
+  <div class="step">Add your plate number under <a href="{{ url_for('user.vehicles') }}">My vehicles</a> so violations can be matched to you.</div>
+{% endif %}
+
+<div class="stats">
+  <div class="stat {{ 'alert' if total }}"><div class="v num">{{ total }}</div><div class="l">Your violations</div></div>
+  <div class="stat {{ 'zone' if open_count }}"><div class="v num">{{ open_count }}</div><div class="l">Waiting for your appeal</div></div>
+  <div class="stat"><div class="v num">{{ overall }}</div><div class="l">Violations on campus in total</div></div>
+</div>
+
+<section class="panel">
+  <h2>Recent violations</h2>
+  {% if recent %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>When</th><th>Type</th><th>Offense</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for v in recent %}
+        <tr>
+          <td>{{ v.detected_at | dt }}</td>
+          <td>{{ v.type | label }}</td>
+          <td>{{ ('#' ~ v.offense_no) if v.offense_no else '-' }}</td>
+          <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
+          <td><a href="{{ url_for('user.violation_detail', vid=v.id) }}">View</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <p class="empty">No violations on your record. Thanks for driving slowly and quietly.</p>
+  {% endif %}
+</section>
+{% endblock %}

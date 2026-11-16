@@ -1,0 +1,18 @@
+{% extends "app.html" %}
+{% block title %}Live camera | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Live camera</h1><p>The feed comes from the detector program running on the laptop.</p></div>
+  <div><span class="dot {{ 'on' if online }}"></span>{% if online %}Detector is online{% elif beat %}Detector last seen {{ beat | dt }}{% else %}Detector hasn't reported in yet{% endif %}</div>
+</div>
+<section class="panel">
+  <div class="live-frame">
+    {% if stream_url %}
+      <img src="{{ stream_url }}" alt="Live view of the monitored road">
+    {% else %}
+      <div><p>No live feed address is set.</p><p><a href="{{ url_for('admin.settings') }}" style="color:#fff">Add the feed address in Settings</a> once the detector is running.</p></div>
+    {% endif %}
+  </div>
+  {% if info %}<p class="muted" style="margin-top:.75rem">Detector says: {{ info }}</p>{% endif %}
+</section>
+{% endblock %}

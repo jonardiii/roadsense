@@ -1,0 +1,33 @@
+{% extends "app.html" %}
+{% block title %}Profile | RoadSense{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Profile</h1><p>SMS alerts go to the mobile number below.</p></div></div>
+
+<section class="panel">
+  <h2>Your details</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="details">
+    <div class="grid-2">
+      <div class="field"><label for="full_name">Full name</label><input id="full_name" name="full_name" type="text" value="{{ g.user.full_name }}" required></div>
+      <div class="field"><label for="phone">Mobile number</label><input id="phone" name="phone" type="tel" value="{{ g.user.phone or '' }}" required></div>
+    </div>
+    <p class="muted">Email: {{ g.user.email }}</p>
+    <button class="btn" type="submit">Save profile</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Change password</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="password">
+    <div class="field"><label for="current">Current password</label><input id="current" name="current" type="password" autocomplete="current-password" required></div>
+    <div class="grid-2">
+      <div class="field"><label for="new">New password</label><input id="new" name="new" type="password" autocomplete="new-password" required></div>
+      <div class="field"><label for="confirm">Confirm new password</label><input id="confirm" name="confirm" type="password" autocomplete="new-password" required></div>
+    </div>
+    <button class="btn" type="submit">Change password</button>
+  </form>
+</section>
+{% endblock %}
