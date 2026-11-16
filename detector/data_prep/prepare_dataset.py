@@ -1,13 +1,13 @@
 """Get plate datasets into one YOLO training set.
 
   # 1. Kaggle "Car License Plate Detection" (images/ + annotations/*.xml in Pascal VOC format)
-  python prepare_dataset.py voc --images kaggle/images --annotations kaggle/annotations --out data/kaggle
+  python -m data_prep.prepare_dataset voc --images kaggle/images --annotations kaggle/annotations --out data/kaggle
 
   # 2. Datasets exported from Roboflow or CVAT in "YOLOv11" format already have the right layout.
 
   # 3. Combine them. Every class becomes one class, "plate". Repeat your own camera frames so they
   #    count for more than the foreign plates (here 3 times):
-  python prepare_dataset.py merge --inputs data/kaggle data/roboflow_ph data/own_frames --repeats 1 1 3 --out data/plates
+  python -m data_prep.prepare_dataset merge --inputs data/kaggle data/roboflow_ph data/own_frames --repeats 1 1 3 --out data/plates
 """
 import argparse
 import re

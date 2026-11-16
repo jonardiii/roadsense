@@ -1,0 +1,88 @@
+{% extends "app.html" %}
+{% from "components/form.html" import input_field %}
+{% from "components/button.html" import button %}
+{% block title %}Admin Profile | RoadSense{% endblock %}
+{% block content %}
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Admin Profile &amp; Security</h1>
+    <p class="muted" style="margin:0">Manage your administrator account details and password.</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('admin.settings') }}">System Settings</a>
+</div>
+
+<div class="repeat-layout">
+  {# Left Column: Details & Password Forms #}
+  <div style="display:flex;flex-direction:column;gap:1.15rem">
+    <section class="edu-card">
+      <div class="settings-section-head">
+        <span class="edu-sched-icon lavender" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+        </span>
+        <div>
+          <h2>Account details</h2>
+          <p class="muted" style="margin:0;font-size:0.78rem">Update your display name, login email, and optional mobile number.</p>
+        </div>
+      </div>
+
+      <form class="form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="details">
+        <div class="grid-2">
+          {{ input_field("full_name", "Full name", value=g.user.full_name, required=true) }}
+          {{ input_field("email", "Email", type="email", value=g.user.email, required=true) }}
+        </div>
+        {{ input_field("phone", "Mobile number", type="tel", value=(g.user.phone or ''), placeholder="09171234567", hint="(optional)") }}
+        <div style="display:flex;justify-content:flex-end;margin-top:0.5rem;padding-top:0.85rem;border-top:1px solid var(--line)">
+          {{ button("Save profile", variant="primary") }}
+        </div>
+      </form>
+    </section>
+
+    <section class="edu-card">
+      <div class="settings-section-head">
+        <span class="edu-sched-icon peach" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <div>
+          <h2>Change password</h2>
+          <p class="muted" style="margin:0;font-size:0.78rem">Use at least 8 characters for your new password.</p>
+        </div>
+      </div>
+
+      <form class="form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="password">
+        {{ input_field("current", "Current password", type="password", autocomplete="current-password", required=true) }}
+        <div class="grid-2">
+          {{ input_field("new", "New password", type="password", autocomplete="new-password", required=true) }}
+          {{ input_field("confirm", "Confirm new password", type="password", autocomplete="new-password", required=true) }}
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:0.5rem;padding-top:0.85rem;border-top:1px solid var(--line)">
+          {{ button("Change password", variant="primary") }}
+        </div>
+      </form>
+    </section>
+  </div>
+
+  {# Right Column: Dark Admin Summary Card #}
+  <aside class="edu-card api-key-card">
+    <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1.15rem">
+      <span class="nav-user-avatar" style="width:48px;height:48px;border-color:rgba(255,255,255,0.18)" aria-hidden="true">{{ g.user.full_name[:1] | upper }}</span>
+      <div style="min-width:0">
+        <strong style="display:block;font-size:1rem;color:#ffffff">{{ g.user.full_name }}</strong>
+        <span style="font-size:0.78rem;color:#d2f366">Administrator</span>
+      </div>
+    </div>
+
+    <div class="api-key-meta">
+      <div><span>Email</span><code style="word-break:break-all">{{ g.user.email }}</code></div>
+      <div><span>Mobile</span><code class="num">{{ g.user.phone or 'Not set' }}</code></div>
+      <div><span>Joined</span><code class="num">{{ g.user.created_at[:10] if g.user.created_at else '-' }}</code></div>
+    </div>
+
+    <a class="btn btn-zone btn-sm" style="width:100%;margin-top:1.15rem" href="{{ url_for('admin.settings') }}">System Settings</a>
+  </aside>
+</div>
+{% endblock %}

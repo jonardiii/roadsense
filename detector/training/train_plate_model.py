@@ -1,6 +1,6 @@
 """Train the plate detector.
 
-   python train_plate_model.py --data data/plates/data.yaml
+   python training/train_plate_model.py --data data/plates/data.yaml
 
 Needs a GPU for sensible speed. On an RTX 4050 (6 GB) a few hundred to a few thousand images take
 roughly half an hour to two hours. The best model is copied to models/plate.pt and its measured
@@ -13,7 +13,7 @@ import shutil
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", required=True, help="data.yaml from prepare_dataset.py")
+    ap.add_argument("--data", required=True, help="data.yaml from data_prep.prepare_dataset")
     ap.add_argument("--model", default="yolo11s.pt", help="starting weights (yolo11n.pt is smaller and faster)")
     ap.add_argument("--epochs", type=int, default=80)
     ap.add_argument("--imgsz", type=int, default=640)

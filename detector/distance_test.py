@@ -1,6 +1,6 @@
 """How small can a plate get before it can't be read? (no camera needed)
 
-  python distance_test.py --images photos --model models/plate.pt
+  python distance_test.py --images samples/photos --model models/plate.pt
 
 Takes your clear photos, finds the plate once at full size, then shrinks each photo so the plate becomes
 160, 120, 100, 80, 60, 50, 40 and 30 pixels wide (as if the vehicle were farther from the camera), and

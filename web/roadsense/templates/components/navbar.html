@@ -1,0 +1,119 @@
+{# Public & Authenticated Top Navbar Components #}
+
+{% macro public_navbar() -%}
+  <header class="public-top">
+    <a class="brand" href="{{ url_for('auth.landing') }}">
+      <span class="brand-logo sm" aria-hidden="true">
+        <span class="brand-ring"></span>
+        <span class="brand-dot"></span>
+      </span>
+      <span>RoadSense</span>
+    </a>
+    <nav>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">Log in</a>
+      <a class="btn btn-zone btn-sm" href="{{ url_for('auth.signup') }}">Sign up</a>
+    </nav>
+  </header>
+{%- endmacro %}
+
+{% macro app_navbar(user, ep, csrf_tok) -%}
+  <header class="app-navbar">
+    {# Left: Wide White Pill Search Bar with "/" Shortcut #}
+    <form class="nav-search-pill" action="{{ url_for('admin.violations' if user.role == 'admin' else 'user.violations') }}" method="get">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7.5"/>
+        <path d="m20 20-3.8-3.8"/>
+      </svg>
+      <input
+        id="nav-search-input"
+        type="text"
+        name="{{ 'q' if user.role == 'admin' else 'status' }}"
+        placeholder="{{ 'Search plate here...' if user.role == 'admin' else 'Filter my violations...' }}"
+        aria-label="{{ 'Search plate here' if user.role == 'admin' else 'Filter my violations' }}"
+      >
+      <kbd class="nav-search-kbd" aria-hidden="true">/</kbd>
+    </form>
+
+    {# Right: Quick Action Buttons + Profile Dropdown #}
+    <div class="app-navbar-right">
+      <a
+        class="nav-circle-btn"
+        href="{{ url_for('admin.violations', status='under_review') if user.role == 'admin' else url_for('user.violations') }}"
+        title="{{ 'Appeals & Messages' if user.role == 'admin' else 'My Appeals' }}"
+        aria-label="{{ 'Appeals & Messages' if user.role == 'admin' else 'My Appeals' }}"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none"/>
+        </svg>
+      </a>
+
+      <a
+        class="nav-circle-btn"
+        href="{{ url_for('admin.violations', status='flagged') if user.role == 'admin' else url_for('user.violations', status='flagged') }}"
+        title="Flagged Violations"
+        aria-label="Flagged Violations"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </a>
+
+      <details class="nav-user-dropdown" id="nav-user-dropdown">
+        <summary class="nav-user-trigger">
+          <span class="nav-user-avatar" aria-hidden="true">{{ user.full_name[:1] | upper }}</span>
+          <span class="nav-user-info">
+            <strong class="nav-user-name">{{ user.full_name.split(' ')[0] | capitalize }}</strong>
+            <span class="nav-user-sub">{{ 'Security Office / BukSU' if user.role == 'admin' else 'Campus Gate / BukSU' }}</span>
+          </span>
+          <span class="nav-user-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </span>
+        </summary>
+        <div class="nav-user-menu">
+          <div class="nav-menu-head">
+            <strong>{{ user.full_name }}</strong>
+            <span>{{ user.email }}</span>
+          </div>
+          <div class="nav-menu-sep"></div>
+          {% if user.role == 'admin' %}
+            <a href="{{ url_for('admin.profile') }}">My Profile</a>
+            <a href="{{ url_for('admin.settings') }}">System Settings</a>
+          {% else %}
+            <a href="{{ url_for('user.profile') }}">My Profile</a>
+          {% endif %}
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_tok }}">
+            <button type="submit" class="nav-menu-logout">Log out</button>
+          </form>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <script>
+  (function () {
+    var input = document.getElementById("nav-search-input");
+    var dd = document.getElementById("nav-user-dropdown");
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        var tag = (document.activeElement && document.activeElement.tagName) || "";
+        if (tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT" && input) {
+          e.preventDefault();
+          input.focus();
+        }
+      } else if (e.key === "Escape" && dd && dd.open) {
+        dd.open = false;
+      }
+    });
+    document.addEventListener("click", function (e) {
+      if (dd && dd.open && !dd.contains(e.target)) dd.open = false;
+    });
+  })();
+  </script>
+{%- endmacro %}

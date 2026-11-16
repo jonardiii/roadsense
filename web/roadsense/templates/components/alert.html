@@ -1,0 +1,57 @@
+{# Basecoat / shadcn/ui Alert, Flash Banner & Bottom-Right Toast Macros #}
+
+{% macro alert(message="", variant="zone", role="status", style="") -%}
+  <div class="alert {{ 'flash-' ~ variant if variant in ('ok', 'error') else ('step' if variant == 'step' else 'alert-' ~ variant) }}" role="{{ role }}" {% if style %}style="{{ style }}"{% endif %}>
+    {%- if variant == 'error' or variant == 'destructive' %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    {%- elif variant == 'ok' %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+    {%- endif %}
+    <span>{%- if caller is defined -%}{{ caller() }}{%- else -%}{{ message }}{%- endif -%}</span>
+  </div>
+{%- endmacro %}
+
+{% macro flash_messages() -%}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {{ alert(message=message, variant=category, role=('alert' if category == 'error' else 'status')) }}
+    {% endfor %}
+  {% endwith %}
+{%- endmacro %}
+
+{% macro toast_messages() -%}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="toast-stack" id="toast-stack" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
+            <span class="toast-icon" aria-hidden="true">
+              {% if category == 'error' %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+              {% endif %}
+            </span>
+            <span class="toast-msg">{{ message }}</span>
+            <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+      <script>
+      (function () {
+        var stack = document.getElementById("toast-stack");
+        if (!stack) return;
+        stack.querySelectorAll(".toast").forEach(function (el) {
+          var timer = setTimeout(function () { dismiss(el); }, 4500);
+          var btn = el.querySelector(".toast-close");
+          if (btn) btn.addEventListener("click", function () { clearTimeout(timer); dismiss(el); });
+        });
+        function dismiss(el) {
+          el.classList.add("is-leaving");
+          setTimeout(function () { el.remove(); }, 220);
+        }
+      })();
+      </script>
+    {% endif %}
+  {% endwith %}
+{%- endmacro %}

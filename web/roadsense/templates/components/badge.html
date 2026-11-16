@@ -1,0 +1,17 @@
+{# Basecoat / shadcn/ui Badge, Status Chip & License Plate Macros #}
+
+{% macro badge(text, variant="secondary", class="") -%}
+  <span class="badge chip chip-{{ variant }} {{ class }}">{{ text }}</span>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+  <span class="badge chip chip-{{ status }}">{{ status | label }}</span>
+{%- endmacro %}
+
+{% macro plate_badge(plate_str, empty_text="Not read") -%}
+  {%- if plate_str -%}
+    <span class="plate">{{ plate_str | plate }}</span>
+  {%- else -%}
+    <span class="muted">{{ empty_text }}</span>
+  {%- endif -%}
+{%- endmacro %}

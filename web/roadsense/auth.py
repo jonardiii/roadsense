@@ -1,8 +1,8 @@
 """Landing page, sign up, log in and log out."""
 import time
 
-from flask import (Blueprint, current_app, flash, g, redirect, render_template, request,
-                   session, url_for)
+from flask import (Blueprint, Response, current_app, flash, g, redirect, render_template,
+                   request, session, url_for)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db, utils
@@ -32,7 +32,7 @@ def _locked(key):
 def landing():
     if g.user:
         return redirect(utils.home_for(g.user))
-    return render_template("landing.html")
+    return render_template("auth/landing.html")
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -45,7 +45,7 @@ def login():
         key = (request.remote_addr, email)
         if _locked(key):
             flash("Too many failed attempts. Wait a few minutes and try again.", "error")
-            return render_template("login.html", email=email), 429
+            return render_template("auth/login.html", email=email), 429
         row = db.get_db().execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         if row and row["active"] and check_password_hash(row["password_hash"], password):
             _failures().pop(key, None)
@@ -55,8 +55,8 @@ def login():
         entry = _failures().setdefault(key, [0, time.time()])
         entry[0] += 1
         flash("The email or password is incorrect.", "error")
-        return render_template("login.html", email=email), 401
-    return render_template("login.html", email="")
+        return render_template("auth/login.html", email=email), 401
+    return render_template("auth/login.html", email="")
 
 
 @bp.route("/signup", methods=["GET", "POST"])
@@ -100,7 +100,7 @@ def signup():
         if errors:
             for msg in errors:
                 flash(msg, "error")
-            return render_template("signup.html", form=form), 400
+            return render_template("auth/signup.html", form=form), 400
 
         now = utils.now_str()
         cur = conn.execute(
@@ -119,10 +119,39 @@ def signup():
         flash("Account created. Violations are linked to you once the Security Services "
               "office verifies your plate.", "ok")
         return redirect(url_for("user.dashboard"))
-    return render_template("signup.html", form=form)
+    return render_template("auth/signup.html", form=form)
 
 
 @bp.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return redirect(url_for("auth.landing"))
+
+
+@bp.route("/robots.txt")
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Allow: /$",
+        "Allow: /static/",
+        "Disallow: /admin/",
+        "Disallow: /me/",
+        "Disallow: /api/",
+        "Disallow: /login",
+        "Disallow: /signup",
+        "Disallow: /logout",
+        f"Sitemap: {utils.site_url()}/sitemap.xml",
+    ]
+    return Response("\n".join(lines) + "\n", mimetype="text/plain")
+
+
+@bp.route("/sitemap.xml")
+def sitemap_xml():
+    base = utils.site_url()
+    body = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        f"  <url><loc>{base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>",
+        "</urlset>",
+    ]
+    return Response("\n".join(body) + "\n", mimetype="application/xml")

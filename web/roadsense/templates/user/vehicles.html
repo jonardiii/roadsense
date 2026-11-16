@@ -1,40 +1,129 @@
 {% extends "app.html" %}
+{% from "components/table.html" import empty_state %}
+{% from "components/pagination.html" import client_pagination %}
+{% from "components/badge.html" import plate_badge %}
+{% from "components/form.html" import input_field, select_field %}
+{% from "components/button.html" import button %}
 {% block title %}My vehicles | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>My vehicles</h1><p>The Security Services office verifies each plate before violations are linked to you.</p></div></div>
 
-<section class="panel">
+{% set ns = namespace(verified=0, pending=0) %}
+{% for v in rows %}
+  {% if v.verified %}
+    {% set ns.verified = ns.verified + 1 %}
+  {% else %}
+    {% set ns.pending = ns.pending + 1 %}
+  {% endif %}
+{% endfor %}
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">My Vehicles</h1>
+    <p class="muted" style="margin:0">The Security Services office verifies each plate before violations are linked to you.</p>
+  </div>
+  <button type="button" class="btn btn-zone btn-sm" id="open-user-add-vehicle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add plate
+  </button>
+</div>
+
+<section class="edu-card">
   {% if rows %}
-  <div class="table-wrap"><table>
-    <thead><tr><th>Plate</th><th>Type</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for v in rows %}
-      <tr>
-        <td><span class="plate">{{ v.plate | plate }}</span></td>
-        <td>{{ v.vehicle_type | capitalize }}</td>
-        <td>{% if v.verified %}<span class="chip chip-ok">Verified</span>{% else %}<span class="chip chip-under_review">Waiting for verification</span>{% endif %}</td>
-        <td>{% if not v.verified %}
-          <form class="inline" method="post" action="{{ url_for('user.remove_vehicle', vid=v.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-ghost btn-sm" type="submit">Remove</button>
-          </form>{% endif %}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-  {% else %}<p class="empty">You haven't added a plate yet.</p>{% endif %}
+    <div class="users-toolbar">
+      <div class="users-filter-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="user-vehicle-search" placeholder="Search by plate or vehicle type..." aria-label="Filter my vehicles">
+      </div>
+      <div class="users-tabs" role="tablist" aria-label="Filter vehicles">
+        <button type="button" class="users-tab is-active" data-filter="all">All ({{ rows | length }})</button>
+        <button type="button" class="users-tab" data-filter="pending">Pending ({{ ns.pending }})</button>
+        <button type="button" class="users-tab" data-filter="verified">Verified ({{ ns.verified }})</button>
+      </div>
+    </div>
+
+    <div class="table-wrap" id="user-vehicles-wrap">
+      <table class="table" id="user-vehicles-table">
+        <thead>
+          <tr>
+            <th>Plate</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th class="r">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for v in rows %}
+          <tr
+            data-status="{{ 'verified' if v.verified else 'pending' }}"
+            data-search="{{ (v.plate ~ ' ' ~ v.vehicle_type) | lower }}"
+          >
+            <td>{{ plate_badge(v.plate) }}</td>
+            <td>
+              <span class="edu-tag {{ 'lavender' if v.vehicle_type == 'car' else ('lime' if v.vehicle_type == 'motorcycle' else 'peach') }}">
+                {{ v.vehicle_type | capitalize }}
+              </span>
+            </td>
+            <td>
+              {% if v.verified %}
+                <span class="badge chip chip-ok"><span class="dot on"></span>Verified</span>
+              {% else %}
+                <span class="badge chip chip-under_review">Waiting for verification</span>
+              {% endif %}
+            </td>
+            <td class="r">
+              {% if not v.verified %}
+                <form class="inline" method="post" action="{{ url_for('user.remove_vehicle', vid=v.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline btn-sm" type="submit">Remove</button>
+                </form>
+              {% else %}
+                <span class="muted" style="font-size:0.78rem">Linked</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ empty_state("Try adjusting your search or verification filter.", title="No matching vehicles", id="user-vehicles-empty", hidden=true) }}
+    {{ client_pagination("user-vehicles-pager", "user-vehicles-table", wrap_id="user-vehicles-wrap", empty_id="user-vehicles-empty", search_id="user-vehicle-search", page_size=10) }}
+  {% else %}
+    {{ empty_state("Add your vehicle plate so campus gate violations and SMS alerts can be matched to you.", title="You haven't added a plate yet") }}
+  {% endif %}
 </section>
 
-<section class="panel">
-  <h2>Add a plate</h2>
-  <form method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="grid-2">
-      <div class="field"><label for="plate">Plate number</label><input id="plate" name="plate" type="text" placeholder="ABC 1234" required></div>
-      <div class="field"><label for="vehicle_type">Vehicle type</label>
-        <select id="vehicle_type" name="vehicle_type"><option value="car">Car</option><option value="motorcycle">Motorcycle</option><option value="other">Other</option></select></div>
+{# Add a Plate Modal #}
+<dialog class="edu-modal" id="user-add-vehicle-modal" aria-labelledby="user-add-vehicle-title">
+  <div class="edu-modal-head">
+    <div>
+      <h2 id="user-add-vehicle-title">Add a plate</h2>
+      <p class="muted" style="margin:0;font-size:0.8rem">The Security Services office will verify it against gate pass records.</p>
     </div>
-    <button class="btn" type="submit">Add plate</button>
+    <button type="button" class="edu-modal-close" id="close-user-add-vehicle" aria-label="Close modal">&times;</button>
+  </div>
+  <form class="form" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {{ input_field("plate", "Plate number", placeholder="ABC 1234", required=true) }}
+    {{ select_field("vehicle_type", "Vehicle type", [('car', 'Car'), ('motorcycle', 'Motorcycle'), ('other', 'Other')]) }}
+    <div class="edu-modal-foot">
+      <button type="button" class="btn btn-outline" id="cancel-user-add-vehicle">Cancel</button>
+      {{ button("Add plate", variant="primary") }}
+    </div>
   </form>
-</section>
+</dialog>
+
+<script>
+(function () {
+  var modal = document.getElementById("user-add-vehicle-modal");
+  var openBtn = document.getElementById("open-user-add-vehicle");
+  var closeBtn = document.getElementById("close-user-add-vehicle");
+  var cancelBtn = document.getElementById("cancel-user-add-vehicle");
+  if (modal && openBtn) {
+    openBtn.addEventListener("click", function () { modal.showModal(); });
+    if (closeBtn) closeBtn.addEventListener("click", function () { modal.close(); });
+    if (cancelBtn) cancelBtn.addEventListener("click", function () { modal.close(); });
+    modal.addEventListener("click", function (e) { if (e.target === modal) modal.close(); });
+  }
+})();
+</script>
 {% endblock %}

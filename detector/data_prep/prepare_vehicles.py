@@ -1,7 +1,7 @@
 """Combine Roboflow vehicle datasets into one set with the classes RoadSense reports.
 
-   python prepare_vehicles.py --inputs data\\ph_vehicles1 data\\ph_vehicles2 --out data\\vehicles
-   python prepare_vehicles.py --inputs data\\big_set --max-images 6000 --out data\\vehicles
+   python -m data_prep.prepare_vehicles --inputs data\\ph_vehicles1 data\\ph_vehicles2 --out data\\vehicles
+   python -m data_prep.prepare_vehicles --inputs data\\big_set --max-images 6000 --out data\\vehicles
 
 Every dataset is a Roboflow export in YOLO format (it has a data.yaml and train/valid folders). The class
 names in each one are matched to these nine: car, van, jeepney, tricycle, motorcycle, bus, truck, pickup,
@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 
-from prepare_dataset import IMAGE_EXT, SPLITS_TRAIN, label_to_box, split_dirs
+from data_prep.prepare_dataset import IMAGE_EXT, SPLITS_TRAIN, label_to_box, split_dirs
 
 CLASSES = ["car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "pickup", "multicab"]
 

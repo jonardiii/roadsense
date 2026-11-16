@@ -35,7 +35,7 @@ def _deliver(phone, message):
     if not key:
         return "failed", "No Semaphore API key is set"
     payload = {"apikey": key, "number": phone, "message": message}
-    sender = db.get_setting("semaphore_sender")
+    sender = os.environ.get("SEMAPHORE_SENDER") or db.get_setting("semaphore_sender")
     if sender:
         payload["sendername"] = sender
     req = Request(SEMAPHORE_URL, data=urlencode(payload).encode(), method="POST")

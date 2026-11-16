@@ -1,6 +1,6 @@
 """Pull sharp frames out of a video to label as plate training images.
 
-   python extract_frames.py --video clip.mp4 --out data/own_raw --every 5
+   python -m data_prep.extract_frames --video clip.mp4 --out data/own_raw --every 5
 
 Upload the frames to Roboflow or CVAT, draw a box around each plate, and export as YOLOv11.
 Frames with a vehicle close enough to read the plate are the useful ones.

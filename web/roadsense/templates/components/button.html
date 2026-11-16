@@ -1,0 +1,23 @@
+{# Basecoat / shadcn/ui Button & Link Button Macros #}
+
+{% macro button(label="", variant="primary", size="", type="submit", name="", value="", class="", attrs="") -%}
+  {%- set v_class = "btn-" ~ variant if variant else "btn-primary" -%}
+  {%- set s_class = "btn-" ~ size if size else "" -%}
+  <button
+    class="btn {{ v_class }} {{ s_class }} {{ class }}"
+    type="{{ type }}"
+    {% if name %}name="{{ name }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    {{ attrs | safe }}
+  >
+    {%- if caller is defined -%}{{ caller() }}{%- else -%}{{ label }}{%- endif -%}
+  </button>
+{%- endmacro %}
+
+{% macro link_button(href, label="", variant="outline", size="", class="") -%}
+  {%- set v_class = "btn-" ~ variant if variant else "btn-primary" -%}
+  {%- set s_class = "btn-" ~ size if size else "" -%}
+  <a class="btn {{ v_class }} {{ s_class }} {{ class }}" href="{{ href }}">
+    {%- if caller is defined -%}{{ caller() }}{%- else -%}{{ label }}{%- endif -%}
+  </a>
+{%- endmacro %}

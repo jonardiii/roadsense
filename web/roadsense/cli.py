@@ -4,6 +4,7 @@
   flask --app roadsense seed-demo        add sample drivers and violations for screenshots
 """
 import getpass
+import os
 import random
 from datetime import datetime, timedelta
 
@@ -32,10 +33,13 @@ def register(app):
 
     @app.cli.command("seed-demo")
     def seed_demo():
-        """Sample data. The demo drivers all use the password 'demo12345'."""
+        """Sample data. Uses ROADSENSE_DEMO_PASSWORD from .env."""
         conn = db.get_db()
         if conn.execute("SELECT 1 FROM users WHERE email = 'demo.driver1@example.com'").fetchone():
             raise click.ClickException("Demo data is already there.")
+        demo_pw = os.environ.get("ROADSENSE_DEMO_PASSWORD", "").strip()
+        if len(demo_pw) < 8:
+            raise click.ClickException("Set ROADSENSE_DEMO_PASSWORD (8+ chars) in web/.env first.")
         now = utils.now_str()
         drivers = [
             ("Demo Driver One", "demo.driver1@example.com", "09171234567", "ABC1234", "car"),
@@ -46,7 +50,7 @@ def register(app):
             cur = conn.execute(
                 "INSERT INTO users(full_name, email, phone, password_hash, role, created_at) "
                 "VALUES (?, ?, ?, ?, 'user', ?)",
-                (name, email, phone, generate_password_hash("demo12345"), now))
+                (name, email, phone, generate_password_hash(demo_pw), now))
             vcur = conn.execute(
                 "INSERT INTO vehicles(user_id, plate, vehicle_type, verified, created_at) VALUES (?, ?, ?, 1, ?)",
                 (cur.lastrowid, plate, vtype, now))

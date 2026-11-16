@@ -1,28 +1,130 @@
 {% extends "app.html" %}
+{% from "components/table.html" import empty_state %}
+{% from "components/pagination.html" import client_pagination %}
 {% block title %}Drivers | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>Drivers</h1><p>Everyone with an account.</p></div></div>
-<section class="panel">
-  <div class="table-wrap"><table>
-    <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Gate pass</th><th class="r">Vehicles</th><th class="r">Violations</th><th>Account</th><th></th></tr></thead>
-    <tbody>
-    {% for u in rows %}
-      <tr>
-        <td>{{ u.full_name }}{% if u.role == 'admin' %} <span class="chip chip-resolved">Admin</span>{% endif %}</td>
-        <td>{{ u.email }}</td>
-        <td class="num">{{ u.phone or '-' }}</td>
-        <td>{{ u.gate_pass_no or '-' }}</td>
-        <td class="r num">{{ u.vehicles }}</td>
-        <td class="r num">{{ u.violations }}</td>
-        <td>{% if u.active %}<span class="chip chip-ok">Active</span>{% else %}<span class="chip chip-dismissed">Deactivated</span>{% endif %}</td>
-        <td>{% if u.id != g.user.id %}
-          <form class="inline" method="post" action="{{ url_for('admin.toggle_user', uid=u.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-ghost btn-sm" type="submit">{{ 'Deactivate' if u.active else 'Reactivate' }}</button>
-          </form>{% endif %}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
+
+{% set ns = namespace(drivers=0, admins=0, inactive=0) %}
+{% for u in rows %}
+  {% if u.role == 'admin' %}
+    {% set ns.admins = ns.admins + 1 %}
+  {% else %}
+    {% set ns.drivers = ns.drivers + 1 %}
+  {% endif %}
+  {% if not u.active %}
+    {% set ns.inactive = ns.inactive + 1 %}
+  {% endif %}
+{% endfor %}
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Drivers &amp; Accounts</h1>
+    <p class="muted" style="margin:0">Everyone registered with the campus gate monitoring system.</p>
+  </div>
+</div>
+
+{# Directory Card with Filter Tabs & Search #}
+<section class="edu-card">
+  <div class="users-toolbar">
+    <div class="users-filter-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="user-search" placeholder="Filter by name, email, phone, or gate pass..." aria-label="Filter drivers">
+    </div>
+    <div class="users-tabs" role="tablist" aria-label="Filter accounts">
+      <button type="button" class="users-tab is-active" data-filter="all">All ({{ rows | length }})</button>
+      <button type="button" class="users-tab" data-filter="user">Drivers ({{ ns.drivers }})</button>
+      <button type="button" class="users-tab" data-filter="admin">Admins ({{ ns.admins }})</button>
+      <button type="button" class="users-tab" data-filter="inactive">Deactivated ({{ ns.inactive }})</button>
+    </div>
+  </div>
+
+  {% if rows %}
+    <div class="table-wrap" id="users-table-wrap">
+      <table class="table users-table" id="users-table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Contact</th>
+            <th>Gate pass</th>
+            <th class="r">Vehicles</th>
+            <th class="r">Violations</th>
+            <th>Status</th>
+            <th class="r">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for u in rows %}
+          {% set palette = ['lavender', 'lime', 'peach', 'apricot'][loop.index0 % 4] %}
+          <tr
+            data-role="{{ u.role }}"
+            data-status="{{ 'active' if u.active else 'inactive' }}"
+            data-search="{{ (u.full_name ~ ' ' ~ u.email ~ ' ' ~ (u.phone or '') ~ ' ' ~ (u.gate_pass_no or '')) | lower }}"
+          >
+            <td>
+              <div class="user-cell">
+                <span class="edu-sched-icon {{ palette }}" aria-hidden="true">{{ u.full_name[:1] | upper }}</span>
+                <div class="user-cell-meta">
+                  <div class="user-cell-name">
+                    <strong>{{ u.full_name }}</strong>
+                    {% if u.role == 'admin' %}
+                      <span class="badge chip chip-under_review">Admin</span>
+                    {% endif %}
+                  </div>
+                  <span class="user-cell-sub">Joined {{ u.created_at[:10] if u.created_at else '-' }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="user-contact">
+                <span class="user-email">{{ u.email }}</span>
+                <span class="user-phone num">{{ u.phone or 'No mobile number' }}</span>
+              </div>
+            </td>
+            <td>
+              {% if u.gate_pass_no %}
+                <span class="plate">{{ u.gate_pass_no }}</span>
+              {% else %}
+                <span class="muted">&mdash;</span>
+              {% endif %}
+            </td>
+            <td class="r num">
+              <span class="user-metric-pill">{{ u.vehicles }}</span>
+            </td>
+            <td class="r num">
+              <span class="user-metric-pill {{ 'has-alert' if u.violations > 0 }}">{{ u.violations }}</span>
+            </td>
+            <td>
+              {% if u.active %}
+                <span class="badge chip chip-ok"><span class="dot on"></span>Active</span>
+              {% else %}
+                <span class="badge chip chip-dismissed">Deactivated</span>
+              {% endif %}
+            </td>
+            <td class="r">
+              {% if u.id != g.user.id %}
+                <form class="inline" method="post" action="{{ url_for('admin.toggle_user', uid=u.id) }}"
+                      data-confirm="{{ 'They can no longer sign in. Their records are kept and you can reactivate the account later.' if u.active else 'They will be able to sign in again.' }}"
+                      data-confirm-title="{{ ('Deactivate ' if u.active else 'Reactivate ') ~ u.full_name ~ '?' }}"
+                      data-confirm-ok="{{ 'Deactivate' if u.active else 'Reactivate' }}"
+                      data-confirm-variant="{{ 'danger' if u.active else 'zone' }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn {{ 'btn-outline' if u.active else 'btn-zone' }} btn-sm" type="submit">
+                    {{ 'Deactivate' if u.active else 'Reactivate' }}
+                  </button>
+                </form>
+              {% else %}
+                <span class="muted" style="font-size:0.78rem">You</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ empty_state("Try adjusting your search or switching the account filter tab.", title="No matching accounts", id="users-empty", hidden=true) }}
+    {{ client_pagination("users-pager", "users-table", wrap_id="users-table-wrap", empty_id="users-empty", search_id="user-search", page_size=10) }}
+  {% else %}
+    {{ empty_state("No accounts registered yet.", title="No accounts") }}
+  {% endif %}
 </section>
 {% endblock %}

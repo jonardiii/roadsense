@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from flask import (Blueprint, Response, abort, current_app, flash, g, redirect,
                    render_template, request, send_from_directory, url_for)
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db, sms, utils
 
@@ -23,7 +24,6 @@ def _guard():
         abort(403)
 
 
-# ---------- dashboard ----------
 @bp.route("/")
 def dashboard():
     conn = db.get_db()
@@ -64,7 +64,6 @@ def dashboard():
     return render_template("admin/dashboard.html", stats=stats, chart=chart, recent=recent, beat=beat)
 
 
-# ---------- violations ----------
 def _violation_filters(args):
     where, params = [], []
     plate = utils.normalize_plate(args.get("q", ""))
@@ -339,7 +338,6 @@ def sound(vid):
     return resp
 
 
-# ---------- live camera ----------
 @bp.route("/live")
 def live():
     beat = db.get_setting("heartbeat_at")
@@ -354,7 +352,6 @@ def live():
                            beat=beat, online=online, info=db.get_setting("heartbeat_info"))
 
 
-# ---------- reports ----------
 def _report_data(date_from, date_to):
     conn = db.get_db()
     base = "substr(detected_at,1,10) BETWEEN ? AND ? AND status != 'dismissed'"
@@ -412,7 +409,6 @@ def reports_csv():
         "Content-Disposition": f"attachment; filename=roadsense_{date_from}_to_{date_to}.csv"})
 
 
-# ---------- drivers ----------
 @bp.route("/users")
 def users():
     rows = db.get_db().execute(
@@ -437,7 +433,6 @@ def toggle_user(uid):
     return redirect(url_for("admin.users"))
 
 
-# ---------- vehicles ----------
 def _link_past(vehicle):
     conn = db.get_db()
     conn.execute(
@@ -521,7 +516,6 @@ def delete_vehicle(vid):
     return redirect(url_for("admin.vehicles"))
 
 
-# ---------- settings ----------
 @bp.route("/settings", methods=["GET", "POST"])
 def settings():
     if request.method == "POST":
@@ -579,3 +573,41 @@ def regenerate_key():
     db.set_setting("api_key", secrets.token_urlsafe(32))
     flash("New detector API key created. Update it in the detector program.", "ok")
     return redirect(url_for("admin.settings"))
+
+
+@bp.route("/profile", methods=["GET", "POST"])
+def profile():
+    conn = db.get_db()
+    if request.method == "POST":
+        if request.form.get("action") == "password":
+            current = request.form.get("current", "")
+            new = request.form.get("new", "")
+            if not check_password_hash(g.user["password_hash"], current):
+                flash("Your current password is incorrect.", "error")
+            elif len(new) < 8 or new != request.form.get("confirm", ""):
+                flash("Use a new password of at least 8 characters, entered twice the same.", "error")
+            else:
+                conn.execute("UPDATE users SET password_hash = ? WHERE id = ?",
+                             (generate_password_hash(new), g.user["id"]))
+                conn.commit()
+                flash("Password changed.", "ok")
+        else:
+            name = request.form.get("full_name", "").strip()
+            email = request.form.get("email", "").strip().lower()
+            raw_phone = request.form.get("phone", "").strip()
+            phone = utils.normalize_phone(raw_phone) if raw_phone else None
+            if not 2 <= len(name) <= 80:
+                flash("Enter your full name.", "error")
+            elif not utils.EMAIL_RE.match(email) or len(email) > 120:
+                flash("Enter a valid email address.", "error")
+            elif raw_phone and not phone:
+                flash("Enter a Philippine mobile number, like 09171234567.", "error")
+            elif conn.execute("SELECT 1 FROM users WHERE email = ? AND id != ?", (email, g.user["id"])).fetchone():
+                flash("Another account already uses this email.", "error")
+            else:
+                conn.execute("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?",
+                             (name, email, phone, g.user["id"]))
+                conn.commit()
+                flash("Profile saved.", "ok")
+        return redirect(url_for("admin.profile"))
+    return render_template("admin/profile.html")

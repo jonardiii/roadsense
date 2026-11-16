@@ -45,7 +45,6 @@ class PlateVote:
             self.reads.remove(min(self.reads, key=lambda r: r[2]))
         return True
 
-    # ---- helpers ----
     def _best_length(self):
         by_len = defaultdict(float)
         for text, _, weight in self.reads:
@@ -70,7 +69,6 @@ class PlateVote:
             shares.append(pos[i].get(ch, 0.0) / total if total else 0.0)
         return sum(shares) / len(shares)
 
-    # ---- result ----
     def consensus(self, verified=()):
         if not self.reads:
             return None

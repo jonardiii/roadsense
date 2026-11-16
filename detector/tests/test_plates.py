@@ -421,7 +421,7 @@ class RealOcrSmokeTest(unittest.TestCase):
 
 class DatasetTools(unittest.TestCase):
     def run_tool(self, *args):
-        run = subprocess.run([sys.executable, "prepare_dataset.py", *args], capture_output=True, text=True, cwd=ROOT)
+        run = subprocess.run([sys.executable, "-m", "data_prep.prepare_dataset", *args], capture_output=True, text=True, cwd=ROOT)
         self.assertEqual(run.returncode, 0, run.stderr)
         return run.stdout
 
@@ -489,7 +489,7 @@ class DatasetTools(unittest.TestCase):
                 w.write(frame)
             w.release()
             out = os.path.join(d, "frames")
-            run = subprocess.run([sys.executable, "extract_frames.py", "--video", video, "--out", out, "--every", "1"],
+            run = subprocess.run([sys.executable, "-m", "data_prep.extract_frames", "--video", video, "--out", out, "--every", "1"],
                                  capture_output=True, text=True, cwd=ROOT)
             self.assertEqual(run.returncode, 0, run.stderr)
             self.assertEqual(len(os.listdir(out)), 10)   # only the detailed frames

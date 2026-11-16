@@ -1,0 +1,67 @@
+{# Basecoat / shadcn/ui Form Field Macros #}
+
+{% macro input_field(id, label, name="", type="text", value="", placeholder="", hint="", required=false, autofocus=false, autocomplete="", maxlength="", step="", style="") -%}
+  <div class="field" {% if style %}style="{{ style }}"{% endif %}>
+    <label class="label" for="{{ id }}">
+      {{ label }}
+      {%- if hint %} <span class="hint">{{ hint }}</span>{% endif -%}
+    </label>
+    <input
+      class="input"
+      id="{{ id }}"
+      name="{{ name or id }}"
+      type="{{ type }}"
+      {% if value is not none and value != "" %}value="{{ value }}"{% endif %}
+      {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+      {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+      {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+      {% if step %}step="{{ step }}"{% endif %}
+      {% if required %}required{% endif %}
+      {% if autofocus %}autofocus{% endif %}
+    >
+  </div>
+{%- endmacro %}
+
+{% macro select_field(id, label, options, selected="", name="", hint="", required=false, onchange="") -%}
+  <div class="field">
+    <label class="label" for="{{ id }}">
+      {{ label }}
+      {%- if hint %} <span class="hint">{{ hint }}</span>{% endif -%}
+    </label>
+    <select
+      class="select"
+      id="{{ id }}"
+      name="{{ name or id }}"
+      {% if onchange %}onchange="{{ onchange }}"{% endif %}
+      {% if required %}required{% endif %}
+    >
+      {%- for val, text in options %}
+        <option value="{{ val }}" {{ 'selected' if (selected ~ '') == (val ~ '') }}>{{ text }}</option>
+      {%- endfor %}
+    </select>
+  </div>
+{%- endmacro %}
+
+{% macro textarea_field(id, label, name="", value="", hint="", maxlength="", required=false, placeholder="") -%}
+  <div class="field">
+    <label class="label" for="{{ id }}">
+      {{ label }}
+      {%- if hint %} <span class="hint">{{ hint }}</span>{% endif -%}
+    </label>
+    <textarea
+      class="textarea"
+      id="{{ id }}"
+      name="{{ name or id }}"
+      {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+      {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+      {% if required %}required{% endif %}
+    >{{ value }}</textarea>
+  </div>
+{%- endmacro %}
+
+{% macro checkbox_field(name, text, checked=false) -%}
+  <label class="check">
+    <input type="checkbox" name="{{ name }}" {{ 'checked' if checked }}>
+    <span>{{ text }}</span>
+  </label>
+{%- endmacro %}

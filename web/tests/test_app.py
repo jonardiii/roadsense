@@ -33,7 +33,6 @@ class AppTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    # ---- helpers ----
     def token(self, client):
         # Pages that render a form create the token. Logged-in clients are redirected away
         # from /login, so set one directly in the session when it's missing.
@@ -72,7 +71,6 @@ class AppTest(unittest.TestCase):
         return client.post("/api/v1/violations", data=fields,
                            headers={"X-API-Key": self.key}, content_type="multipart/form-data")
 
-    # ---- tests ----
     def test_api_needs_key(self):
         c = self.app.test_client()
         self.assertEqual(c.get("/api/v1/health").status_code, 401)
@@ -366,7 +364,6 @@ class AppTest(unittest.TestCase):
         self.assertEqual(format_plate("1201401686"), "1201-401686")
         self.assertEqual(format_plate(None), "")
 
-    # ---- SMS delivery and retry ----
     def live_driver(self):
         """A verified vehicle with an owner who has a phone, SMS in live mode with a key."""
         with self.app.app_context():
@@ -510,6 +507,54 @@ class AppTest(unittest.TestCase):
         self.signup(driver, full_name="<script>alert(1)</script>")
         html = driver.get("/me/").get_data(as_text=True)
         self.assertNotIn("<script>alert(1)</script>", html)
+
+    def test_admin_profile_update_and_password(self):
+        admin = self.app.test_client()
+        self.login(admin, "admin@example.com", "adminpass1")
+        self.assertEqual(admin.get("/admin/profile").status_code, 200)
+        self.post(admin, "/admin/profile", {
+            "action": "details",
+            "full_name": "Chief Security Officer",
+            "email": "chief@example.com",
+            "phone": "0917 555 1234",
+        })
+        self.post(admin, "/admin/profile", {
+            "action": "password",
+            "current": "adminpass1",
+            "new": "newadminpass1",
+            "confirm": "newadminpass1",
+        })
+        c2 = self.app.test_client()
+        self.assertEqual(self.login(c2, "chief@example.com", "newadminpass1").status_code, 302)
+        self.assertEqual(c2.get("/admin/profile").status_code, 200)
+
+    def test_seo_metadata_robots_and_sitemap(self):
+        c = self.app.test_client()
+        home = c.get("/")
+        self.assertEqual(home.status_code, 200)
+        html = home.get_data(as_text=True)
+        self.assertIn("RoadSense", html)
+        self.assertIn("/login", html)
+
+        for path in ("/login", "/signup"):
+            r = c.get(path)
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.headers.get("X-Robots-Tag"), "noindex, nofollow")
+            self.assertIn('content="noindex, nofollow"', r.get_data(as_text=True))
+
+        robots = c.get("/robots.txt")
+        self.assertEqual(robots.status_code, 200)
+        rtxt = robots.get_data(as_text=True)
+        self.assertIn("Disallow: /admin/", rtxt)
+        self.assertIn("Disallow: /login", rtxt)
+        self.assertIn("Sitemap:", rtxt)
+
+        sitemap = c.get("/sitemap.xml")
+        self.assertEqual(sitemap.status_code, 200)
+        stxt = sitemap.get_data(as_text=True)
+        self.assertIn("<urlset", stxt)
+        self.assertNotIn("/login", stxt)
+        self.assertNotIn("/admin", stxt)
 
 
 if __name__ == "__main__":

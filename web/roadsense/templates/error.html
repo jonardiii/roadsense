@@ -1,11 +1,12 @@
 {% extends "public.html" %}
 {% block title %}{{ title }} | RoadSense{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
 {% block content %}
-<main class="auth-wrap">
-  <div class="auth-card">
+<main class="auth-wrap" id="main-content">
+  <div class="card auth-card">
     <h1>{{ title }}</h1>
-    {% if detail and code in (400, 413) %}<p>{{ detail }}</p>{% endif %}
-    <p><a class="btn" href="{{ url_for('auth.landing') }}">Go to the home page</a></p>
+    {% if detail and code in (400, 413) %}<p class="muted" style="margin-bottom:1.25rem">{{ detail }}</p>{% endif %}
+    <p style="margin-top:1rem"><a class="btn btn-primary" href="{{ url_for('auth.landing') }}">Go to the home page</a></p>
   </div>
 </main>
 {% endblock %}

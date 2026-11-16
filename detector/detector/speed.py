@@ -64,7 +64,6 @@ class Calibration:
             raise ValueError("The corners don't form a four-sided shape in order. Click near-left, "
                              "near-right, far-right, far-left.")
 
-    # ---- mapping ----
     def to_world(self, px, py, frame_size=None):
         if frame_size and tuple(frame_size) != self.frame_size:
             px *= self.frame_size[0] / frame_size[0]
@@ -78,7 +77,6 @@ class Calibration:
         v = self.H_inv @ np.array([x, y, 1.0])
         return float(v[0] / v[2]), float(v[1] / v[2])
 
-    # ---- files ----
     def save(self, path):
         with open(path, "w", encoding="utf-8") as fh:
             json.dump({
@@ -94,7 +92,6 @@ class Calibration:
             d = json.load(fh)
         return cls(d["image_points"], d["world_points"], d["frame_size"], zone=Zone(**d["zone"]))
 
-    # ---- drawing ----
     def draw(self, image, grid_m=1.0):
         """Overlay the measurement zone and a metre grid so you can check the calibration by eye."""
         out = image.copy()

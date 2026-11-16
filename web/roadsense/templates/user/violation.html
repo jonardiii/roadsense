@@ -3,15 +3,15 @@
 {% block content %}
 <div class="page-head">
   <div><h1>{{ v.type | label }} violation</h1><p class="num">{{ v.record_id }} &middot; {{ v.detected_at | dt }}</p></div>
-  <span class="chip chip-{{ v.status }}">{{ v.status | label }}</span>
+  <span class="badge chip chip-{{ v.status }}">{{ v.status | label }}</span>
 </div>
 
 {% if v.offense_no and v.status != 'dismissed' %}
-  <div class="step">Offense #{{ v.offense_no }}. {{ v.offense_no | next_step }}</div>
+  <div class="alert step">Offense #{{ v.offense_no }}. {{ v.offense_no | next_step }}</div>
 {% endif %}
 
 <div class="detail">
-  <section class="panel evidence">
+  <section class="card panel evidence">
     <h2>Photo</h2>
     {% if v.image_path %}
       <img class="zoomable" data-zoom="{{ url_for('user.evidence', vid=v.id) }}" title="Click to zoom" src="{{ url_for('user.evidence', vid=v.id) }}" alt="Photo for {{ v.record_id }}">
@@ -19,16 +19,16 @@
       <div class="noimg">No photo was saved for this record.</div>
     {% endif %}
     {% if v.video_path %}
-      <h2 style="margin-top:1rem">Video clip</h2>
-      <video id="clip" controls preload="metadata" playsinline style="width:100%;border-radius:8px" src="{{ url_for('user.clip', vid=v.id) }}"></video>
-      <button type="button" class="zoombtn" data-zoomvideo="clip">Enlarge / zoom video</button>
+      <h2 style="margin-top:1.25rem">Video clip</h2>
+      <video id="clip" controls preload="metadata" playsinline style="width:100%;border-radius:8px;border:1px solid var(--border)" src="{{ url_for('user.clip', vid=v.id) }}"></video>
+      <div style="margin-top:.5rem"><button type="button" class="btn btn-outline btn-sm" data-zoomvideo="clip">Enlarge / zoom video</button></div>
     {% endif %}
     {% if v.audio_path %}
-      <h2 style="margin-top:1rem">Sound</h2>
+      <h2 style="margin-top:1.25rem">Sound</h2>
       <audio controls preload="metadata" style="width:100%" src="{{ url_for('user.sound', vid=v.id) }}"></audio>
     {% endif %}
   </section>
-  <section class="panel">
+  <section class="card panel">
     <h2>Details</h2>
     <dl class="facts-list">
       {% if v.vehicle_class %}<dt>Vehicle</dt><dd>{{ v.vehicle_class | capitalize }}</dd>{% endif %}
@@ -43,7 +43,7 @@
   </section>
 </div>
 
-<section class="panel">
+<section class="card panel">
   <h2>Appeal</h2>
   {% for a in appeals %}
     <p><strong>{{ 'Letter of apology' if a.kind == 'apology' else 'Dispute' }}</strong> <span class="muted">sent {{ a.created_at | dt }}</span></p>
@@ -56,16 +56,16 @@
   {% endfor %}
 
   {% if can_appeal %}
-    <form method="post" action="{{ url_for('user.appeal', vid=v.id) }}">
+    <form class="form" method="post" action="{{ url_for('user.appeal', vid=v.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="field"><label for="kind">What are you sending?</label>
-        <select id="kind" name="kind">
+      <div class="field"><label class="label" for="kind">What are you sending?</label>
+        <select class="select" id="kind" name="kind">
           <option value="apology">A letter of apology</option>
           <option value="dispute">A dispute: this record is wrong</option>
         </select></div>
-      <div class="field"><label for="message">Your message <span class="hint">(10 to 1000 characters)</span></label>
-        <textarea id="message" name="message" maxlength="1000" required></textarea></div>
-      <button class="btn" type="submit">Send appeal</button>
+      <div class="field"><label class="label" for="message">Your message <span class="hint">(10 to 1000 characters)</span></label>
+        <textarea class="textarea" id="message" name="message" maxlength="1000" required></textarea></div>
+      <button class="btn btn-primary" type="submit">Send appeal</button>
     </form>
   {% elif not appeals %}
     <p class="muted">This record is closed, so it can't take an appeal.</p>

@@ -1,40 +1,21 @@
 {% extends "base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% from "components/sidebar.html" import sidebar with context %}
+{% from "components/navbar.html" import app_navbar with context %}
+{% from "components/alert.html" import toast_messages with context %}
+{% from "components/confirm.html" import confirm_dialog %}
 {% block body %}
 {% set ep = request.endpoint %}
 <div class="shell">
-  <aside class="side">
-    <a class="brand" href="{{ url_for('auth.landing') }}"><span class="mark"></span>RoadSense</a>
-    <nav aria-label="Main">
-      {% if g.user.role == 'admin' %}
-        <a href="{{ url_for('admin.dashboard') }}" {% if ep == 'admin.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
-        <a href="{{ url_for('admin.violations') }}" {% if ep in ('admin.violations', 'admin.violation_detail') %}aria-current="page"{% endif %}>Violations</a>
-        <a href="{{ url_for('admin.repeat') }}" {% if ep == 'admin.repeat' %}aria-current="page"{% endif %}>Repeat plates</a>
-        <a href="{{ url_for('admin.live') }}" {% if ep == 'admin.live' %}aria-current="page"{% endif %}>Live camera</a>
-        <a href="{{ url_for('admin.reports') }}" {% if ep == 'admin.reports' %}aria-current="page"{% endif %}>Reports</a>
-        <a href="{{ url_for('admin.users') }}" {% if ep == 'admin.users' %}aria-current="page"{% endif %}>Drivers</a>
-        <a href="{{ url_for('admin.vehicles') }}" {% if ep == 'admin.vehicles' %}aria-current="page"{% endif %}>Vehicles</a>
-        <a href="{{ url_for('admin.settings') }}" {% if ep == 'admin.settings' %}aria-current="page"{% endif %}>Settings</a>
-      {% else %}
-        <a href="{{ url_for('user.dashboard') }}" {% if ep == 'user.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
-        <a href="{{ url_for('user.violations') }}" {% if ep in ('user.violations', 'user.violation_detail') %}aria-current="page"{% endif %}>My violations</a>
-        <a href="{{ url_for('user.vehicles') }}" {% if ep == 'user.vehicles' %}aria-current="page"{% endif %}>My vehicles</a>
-        <a href="{{ url_for('user.profile') }}" {% if ep == 'user.profile' %}aria-current="page"{% endif %}>Profile</a>
-      {% endif %}
-    </nav>
-    <div class="side-foot">
-      <div>
-        <div class="who">{{ g.user.full_name }}</div>
-        <div class="role">{{ 'Administrator' if g.user.role == 'admin' else 'Driver' }}</div>
-      </div>
-      <form method="post" action="{{ url_for('auth.logout') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-ghost btn-sm" type="submit">Log out</button>
-      </form>
-    </div>
-  </aside>
-  <main class="main">
-    {% include "_flash.html" %}
-    {% block content %}{% endblock %}
-  </main>
+  {{ sidebar(g.user, ep, csrf_token()) }}
+  <div class="shell-content">
+    {{ app_navbar(g.user, ep, csrf_token()) }}
+    <main class="main" id="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 </div>
+{{ confirm_dialog() }}
+<script src="{{ url_for('static', filename='confirm.js') }}" defer></script>
+{{ toast_messages() }}
 {% endblock %}

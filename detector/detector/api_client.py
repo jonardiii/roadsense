@@ -23,7 +23,6 @@ class ApiClient:
         os.makedirs(self.outbox, exist_ok=True)
         os.makedirs(self.rejected_dir, exist_ok=True)
 
-    # ---- read ----
     def _get(self, path):
         try:
             r = requests.get(self.base + path, headers=self.headers, timeout=self.timeout)
@@ -54,7 +53,6 @@ class ApiClient:
         except requests.RequestException:
             return False
 
-    # ---- write ----
     def _post_violation(self, fields, jpeg, video=None, audio=None):
         files = {}
         if jpeg:
@@ -89,7 +87,6 @@ class ApiClient:
         self._stash(fields, jpeg, self.rejected_dir, video, audio)
         return REJECTED
 
-    # ---- outbox ----
     def _stash(self, fields, jpeg, folder, video=None, audio=None):
         name = uuid.uuid4().hex
         # photo and clip first, the .json last: the outbox only picks up a record once its json exists

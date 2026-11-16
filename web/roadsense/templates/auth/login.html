@@ -1,0 +1,22 @@
+{% extends "public.html" %}
+{% from "components/form.html" import input_field %}
+{% from "components/button.html" import button %}
+{% from "components/alert.html" import flash_messages with context %}
+{% block title %}Log in | RoadSense{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<main class="auth-wrap" id="main-content">
+  <div class="card auth-card">
+    <h1>Log in</h1>
+    <p class="muted" style="margin-bottom:1.25rem">Enter your credentials to access your RoadSense portal.</p>
+    {{ flash_messages() }}
+    <form class="form" method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ input_field("email", "Email", type="email", value=email, placeholder="you@example.com", autocomplete="username", required=true, autofocus=true) }}
+      {{ input_field("password", "Password", type="password", autocomplete="current-password", required=true) }}
+      {{ button("Log in", variant="primary", attrs='style="width:100%"') }}
+    </form>
+    <p class="auth-foot">New driver? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+  </div>
+</main>
+{% endblock %}

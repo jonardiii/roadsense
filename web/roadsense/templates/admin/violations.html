@@ -1,66 +1,156 @@
 {% extends "app.html" %}
+{% from "components/pagination.html" import pagination %}
+{% from "components/table.html" import empty_state %}
+{% from "components/badge.html" import status_badge, plate_badge %}
 {% block title %}Violations | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><h1>Violations</h1><p>{{ total }} record{{ '' if total == 1 else 's' }} match.</p></div>
-  <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.reports_csv', date_from=args.get('date_from'), date_to=args.get('date_to')) }}">Export CSV</a>
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Violations</h1>
+    <p class="muted" style="margin:0">{{ total }} record{{ '' if total == 1 else 's' }} match.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.reports_csv', date_from=args.get('date_from'), date_to=args.get('date_to')) }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      Export CSV
+    </a>
+    {% if total %}
+      <button type="button" class="btn btn-outline btn-sm btn-danger-outline" id="open-delete-modal">
+        Delete {{ total }}
+      </button>
+    {% endif %}
+  </div>
 </div>
 
-<form class="panel filters" method="get">
-  <div class="field"><label for="q">Plate</label><input id="q" name="q" type="text" value="{{ args.get('q', '') }}" placeholder="ABC1234"></div>
-  <div class="field"><label for="type">Type</label>
-    <select id="type" name="type"><option value="">All</option>
+<section class="edu-card">
+  <form class="violations-toolbar" method="get">
+    <div class="users-filter-input" style="max-width:none;min-width:200px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" name="q" type="text" value="{{ args.get('q', '') }}" placeholder="Search plate (e.g. ABC1234)..." aria-label="Plate">
+    </div>
+
+    <select class="select viol-select" id="type" name="type" aria-label="Type">
+      <option value="">All types</option>
       <option value="speeding" {{ 'selected' if args.get('type') == 'speeding' }}>Speeding</option>
-      <option value="honking" {{ 'selected' if args.get('type') == 'honking' }}>Honking</option></select></div>
-  <div class="field"><label for="status">Status</label>
-    <select id="status" name="status"><option value="">All</option>
+      <option value="honking" {{ 'selected' if args.get('type') == 'honking' }}>Honking</option>
+    </select>
+
+    <select class="select viol-select" id="status" name="status" aria-label="Status">
+      <option value="">All statuses</option>
       {% for s in ('flagged', 'under_review', 'resolved', 'dismissed') %}
         <option value="{{ s }}" {{ 'selected' if args.get('status') == s }}>{{ s | label }}</option>
-      {% endfor %}</select></div>
-  <div class="field"><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ args.get('date_from', '') }}"></div>
-  <div class="field"><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ args.get('date_to', '') }}"></div>
-  <button class="btn" type="submit">Filter</button>
-  <a class="btn btn-ghost" href="{{ url_for('admin.violations') }}">Clear</a>
-</form>
+      {% endfor %}
+    </select>
 
-<section class="panel">
+    <input class="input viol-date" id="date_from" name="date_from" type="date" value="{{ args.get('date_from', '') }}" aria-label="From date" title="From date">
+    <input class="input viol-date" id="date_to" name="date_to" type="date" value="{{ args.get('date_to', '') }}" aria-label="To date" title="To date">
+
+    <div style="display:inline-flex;gap:0.45rem;align-items:center">
+      <button class="btn btn-primary btn-sm" type="submit">Filter</button>
+      {% if args %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.violations') }}">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
   {% if rows %}
-  <div class="table-wrap"><table>
-    <thead><tr><th>Record</th><th>Detected</th><th>Type</th><th>Vehicle</th><th>Plate</th><th>Driver</th><th>Reading</th><th>Status</th></tr></thead>
-    <tbody>
-    {% for v in rows %}
-      <tr>
-        <td><a href="{{ url_for('admin.violation_detail', vid=v.id) }}">{{ v.record_id or v.id }}</a></td>
-        <td>{{ v.detected_at | dt }}</td>
-        <td>{{ v.type | label }}</td>
-        <td>{{ (v.vehicle_class or '-') | capitalize }}</td>
-        <td>{% if v.plate %}<span class="plate">{{ v.plate | plate }}</span>{% else %}<span class="muted">Not read</span>{% endif %}</td>
-        <td>{{ v.full_name or 'Not registered' }}</td>
-        <td class="num">{% if v.type == 'speeding' %}{{ '%.1f' | format(v.speed_kmh) }} km/h{% elif v.db_level %}{{ '%.1f' | format(v.db_level) }} dB{% else %}-{% endif %}</td>
-        <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-  <div class="pager">
-    {% if page > 1 %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin.violations', page=page - 1, **args) }}">Previous</a>{% endif %}
-    <span class="muted">Page {{ page }} of {{ pages }}</span>
-    {% if page < pages %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin.violations', page=page + 1, **args) }}">Next</a>{% endif %}
-  </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Record</th>
+            <th>Type</th>
+            <th>Plate</th>
+            <th>Driver</th>
+            <th class="r">Reading</th>
+            <th class="r">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for v in rows %}
+          <tr>
+            <td>
+              <div class="user-contact">
+                <a href="{{ url_for('admin.violation_detail', vid=v.id) }}" style="font-weight:700;text-decoration:none">
+                  {{ v.record_id or v.id }}
+                </a>
+                <span class="user-phone">{{ v.detected_at | dt }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="user-contact">
+                <span>
+                  <span class="edu-tag {{ 'lavender' if v.type == 'speeding' else 'peach' }}">{{ v.type | label }}</span>
+                </span>
+                <span class="user-phone">{{ (v.vehicle_class or 'Unknown vehicle') | capitalize }}</span>
+              </div>
+            </td>
+            <td>{{ plate_badge(v.plate, "Not read") }}</td>
+            <td>
+              {% if v.full_name %}
+                <strong>{{ v.full_name }}</strong>
+              {% else %}
+                <span class="muted">Not registered</span>
+              {% endif %}
+            </td>
+            <td class="r num">
+              {% if v.type == 'speeding' %}
+                <strong>{{ '%.1f' | format(v.speed_kmh) }}</strong> <span class="muted">km/h</span>
+              {% elif v.db_level %}
+                <strong>{{ '%.1f' | format(v.db_level) }}</strong> <span class="muted">dB</span>
+              {% else %}
+                <span class="muted">&mdash;</span>
+              {% endif %}
+            </td>
+            <td class="r">{{ status_badge(v.status) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pagination(page, pages, 'admin.violations', args, total=total, per_page=20) }}
   {% else %}
-    <p class="empty">No violations match these filters.</p>
+    {{ empty_state("Try adjusting or clearing your plate, type, status, or date filters.", title="No violations match these filters") }}
   {% endif %}
 </section>
+
 {% if total %}
-<section class="panel">
-  <h2>Delete records</h2>
-  <p class="muted">Deletes all {{ total }} record{{ '' if total == 1 else 's' }} that match the filters above, together with their photos, appeals and text message logs. Clear the filters first to delete everything. This cannot be undone. Use it to remove test data.</p>
-  <form method="post" action="{{ url_for('admin.delete_matching_violations') }}" onsubmit="return confirm('Delete {{ total }} violation(s) and their photos? This cannot be undone.');">
+<dialog class="edu-modal" id="delete-matching-modal" aria-labelledby="delete-modal-title">
+  <div class="edu-modal-head">
+    <div>
+      <h2 id="delete-modal-title" style="color:var(--signal-ink)">Delete {{ total }} record{{ '' if total == 1 else 's' }}</h2>
+      <p class="muted" style="margin:0;font-size:0.8rem">Deletes all {{ total }} matching record{{ '' if total == 1 else 's' }} together with their photos, appeals, and SMS logs. This cannot be undone.</p>
+    </div>
+    <button type="button" class="edu-modal-close" id="close-delete-modal" aria-label="Close modal">&times;</button>
+  </div>
+  <form class="form" method="post" action="{{ url_for('admin.delete_matching_violations') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for k, val in args.items() %}<input type="hidden" name="{{ k }}" value="{{ val }}">{% endfor %}
-    <div class="field"><label for="confirm">Type DELETE to confirm</label><input id="confirm" name="confirm" type="text" autocomplete="off" placeholder="DELETE"></div>
-    <button class="btn btn-danger" type="submit">Delete {{ total }} record{{ '' if total == 1 else 's' }}</button>
+    <div class="field">
+      <label class="label" for="confirm">Type DELETE to confirm</label>
+      <input class="input" id="confirm" name="confirm" type="text" autocomplete="off" placeholder="DELETE" required>
+    </div>
+    <div class="edu-modal-foot">
+      <button type="button" class="btn btn-outline" id="cancel-delete-modal">Cancel</button>
+      <button class="btn btn-danger" type="submit">Delete {{ total }} record{{ '' if total == 1 else 's' }}</button>
+    </div>
   </form>
-</section>
+</dialog>
+
+<script>
+(function () {
+  var modal = document.getElementById("delete-matching-modal");
+  var openBtn = document.getElementById("open-delete-modal");
+  var closeBtn = document.getElementById("close-delete-modal");
+  var cancelBtn = document.getElementById("cancel-delete-modal");
+  if (modal && openBtn) {
+    openBtn.addEventListener("click", function () { modal.showModal(); });
+    if (closeBtn) closeBtn.addEventListener("click", function () { modal.close(); });
+    if (cancelBtn) cancelBtn.addEventListener("click", function () { modal.close(); });
+    modal.addEventListener("click", function (e) { if (e.target === modal) modal.close(); });
+  }
+})();
+</script>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,32 @@
+{# Basecoat / shadcn/ui Card, Stat Card & Page Header Macros #}
+
+{% macro card(title="", description="", variant="", class="", style="") -%}
+  <section class="card panel {{ 'panel-' ~ variant if variant else '' }} {{ class }}" {% if style %}style="{{ style }}"{% endif %}>
+    {%- if title %}
+      <h2>{{ title }}</h2>
+    {%- endif %}
+    {%- if description %}
+      <p class="muted" style="margin-bottom:1rem">{{ description }}</p>
+    {%- endif %}
+    {{ caller() }}
+  </section>
+{%- endmacro %}
+
+{% macro stat_card(value, label, variant="") -%}
+  <div class="card stat {{ variant }}">
+    <div class="v num">{{ value }}</div>
+    <div class="l">{{ label }}</div>
+  </div>
+{%- endmacro %}
+
+{% macro page_header(title, subtitle="", subtitle_class="") -%}
+  <div class="page-head">
+    <div>
+      <h1>{{ title }}</h1>
+      {%- if subtitle %}<p {% if subtitle_class %}class="{{ subtitle_class }}"{% endif %}>{{ subtitle }}</p>{% endif %}
+    </div>
+    {%- if caller is defined -%}
+      {{ caller() }}
+    {%- endif -%}
+  </div>
+{%- endmacro %}

@@ -1,38 +1,78 @@
 {% extends "app.html" %}
+{% from "components/table.html" import empty_state %}
+{% from "components/pagination.html" import client_pagination %}
+{% from "components/badge.html" import status_badge, plate_badge %}
 {% block title %}My violations | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><h1>My violations</h1><p>Open a record to see the photo and send an appeal.</p></div>
-  <form method="get" class="filters" style="margin:0">
-    <div class="field"><label for="status">Show</label>
-      <select id="status" name="status" onchange="this.form.submit()">
-        <option value="">All</option>
-        {% for s in ('flagged', 'under_review', 'resolved', 'dismissed') %}
-          <option value="{{ s }}" {{ 'selected' if status == s }}>{{ s | label }}</option>
-        {% endfor %}
-      </select></div>
-    <noscript><button class="btn btn-sm" type="submit">Filter</button></noscript>
-  </form>
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">My Violations</h1>
+    <p class="muted" style="margin:0">Open a record to inspect the photo or clip and send an appeal.</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('user.vehicles') }}">My Vehicles</a>
 </div>
-<section class="panel">
-  {% if rows %}
-    <div class="table-wrap"><table>
-      <thead><tr><th>Record</th><th>When</th><th>Type</th><th>Plate</th><th>Offense</th><th>Status</th></tr></thead>
-      <tbody>
-      {% for v in rows %}
-        <tr>
-          <td><a href="{{ url_for('user.violation_detail', vid=v.id) }}">{{ v.record_id }}</a></td>
-          <td>{{ v.detected_at | dt }}</td>
-          <td>{{ v.type | label }}</td>
-          <td><span class="plate">{{ v.plate | plate }}</span></td>
-          <td>{{ ('#' ~ v.offense_no) if v.offense_no else '-' }}</td>
-          <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
-        </tr>
+
+<section class="edu-card">
+  <div class="users-toolbar">
+    <div class="users-filter-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="user-viol-search" placeholder="Search by record ID, plate, or type..." aria-label="Search my violations">
+    </div>
+    <div class="users-tabs" role="navigation" aria-label="Filter by status">
+      <a class="users-tab {{ 'is-active' if not status }}" style="text-decoration:none" href="{{ url_for('user.violations') }}">All</a>
+      {% for s in ('flagged', 'under_review', 'resolved', 'dismissed') %}
+        <a class="users-tab {{ 'is-active' if status == s }}" style="text-decoration:none" href="{{ url_for('user.violations', status=s) }}">{{ s | label }}</a>
       {% endfor %}
-      </tbody>
-    </table></div>
+    </div>
+  </div>
+
+  {% if rows %}
+    <div class="table-wrap" id="user-viol-wrap">
+      <table class="table" id="user-viol-table">
+        <thead>
+          <tr>
+            <th>Record</th>
+            <th>Type</th>
+            <th>Plate</th>
+            <th>Offense</th>
+            <th>Status</th>
+            <th class="r">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for v in rows %}
+          <tr data-search="{{ ((v.record_id or '') ~ ' ' ~ (v.plate or '') ~ ' ' ~ v.type) | lower }}">
+            <td>
+              <div class="user-contact">
+                <a href="{{ url_for('user.violation_detail', vid=v.id) }}" style="font-weight:700;text-decoration:none">
+                  {{ v.record_id }}
+                </a>
+                <span class="user-phone">{{ v.detected_at | dt }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="edu-tag {{ 'lavender' if v.type == 'speeding' else 'peach' }}">{{ v.type | label }}</span>
+            </td>
+            <td>{{ plate_badge(v.plate, "-") }}</td>
+            <td class="num">
+              <span class="user-metric-pill {{ 'has-alert' if v.offense_no and v.status != 'dismissed' }}">
+                {{ ('#' ~ v.offense_no) if v.offense_no else '-' }}
+              </span>
+            </td>
+            <td>{{ status_badge(v.status) }}</td>
+            <td class="r">
+              <a class="btn btn-outline btn-sm" href="{{ url_for('user.violation_detail', vid=v.id) }}">View &rsaquo;</a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ empty_state("Try a different record ID, plate, or violation type.", title="No matching violations", id="user-viol-empty", hidden=true) }}
+    {{ client_pagination("user-viol-pager", "user-viol-table", wrap_id="user-viol-wrap", empty_id="user-viol-empty", search_id="user-viol-search", tab_selector=".no-tabs", page_size=10) }}
   {% else %}
-    <p class="empty">{{ 'No violations match this filter.' if status else 'No violations on your record.' }}</p>
+    {{ empty_state(('No violations match this status filter.' if status else 'No violations on your record. Thanks for driving safely!'), title='No violations found') }}
   {% endif %}
 </section>
 {% endblock %}

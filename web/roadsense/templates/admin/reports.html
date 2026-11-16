@@ -1,41 +1,165 @@
 {% extends "app.html" %}
+{% from "components/table.html" import empty_state %}
+{% from "components/badge.html" import plate_badge %}
 {% block title %}Reports | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><h1>Reports</h1><p>Dismissed violations are left out of the totals.</p></div>
-  <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.reports_csv', date_from=date_from, date_to=date_to) }}">Export CSV</a>
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Reports &amp; Analytics</h1>
+    <p class="muted" style="margin:0">Dismissed violations are left out of the totals.</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('admin.reports_csv', date_from=date_from, date_to=date_to) }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+    Export CSV
+  </a>
 </div>
 
-<form class="panel filters" method="get">
-  <div class="field"><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ date_from }}"></div>
-  <div class="field"><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ date_to }}"></div>
-  <button class="btn" type="submit">Show report</button>
-</form>
+<section class="edu-card" style="margin-bottom:1.15rem">
+  <form class="violations-toolbar" style="margin-bottom:1.15rem" method="get">
+    <span class="muted" style="font-weight:600;font-size:0.82rem">Date range:</span>
+    <input class="input viol-date" id="date_from" name="date_from" type="date" value="{{ date_from }}" aria-label="From date">
+    <span class="muted" aria-hidden="true">&rarr;</span>
+    <input class="input viol-date" id="date_to" name="date_to" type="date" value="{{ date_to }}" aria-label="To date">
+    <button class="btn btn-primary btn-sm" type="submit">Show report</button>
+  </form>
 
-<div class="stats">
-  <div class="stat zone"><div class="v num">{{ total }}</div><div class="l">Violations</div></div>
-  <div class="stat"><div class="v num">{{ by_type.get('speeding', 0) }}</div><div class="l">Speeding</div></div>
-  <div class="stat"><div class="v num">{{ by_type.get('honking', 0) }}</div><div class="l">Honking</div></div>
-</div>
+  <div class="bento-kpi-grid">
+    <div class="bento-kpi">
+      <div class="bento-kpi-top">
+        <span class="bento-kpi-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        </span>
+        <div class="bento-kpi-val">
+          <strong class="num">{{ total }}</strong>
+          <span>Total Violations</span>
+        </div>
+      </div>
+      <div class="bento-kpi-foot">
+        <span class="bento-kpi-pill num">{{ date_from }} &ndash; {{ date_to }}</span>
+      </div>
+    </div>
+
+    <div class="bento-kpi">
+      <div class="bento-kpi-top">
+        <span class="bento-kpi-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+        </span>
+        <div class="bento-kpi-val">
+          <strong class="num">{{ by_type.get('speeding', 0) }}</strong>
+          <span>Speeding</span>
+        </div>
+      </div>
+      <div class="bento-kpi-foot">
+        <span class="bento-kpi-pill num">{{ ((100 * by_type.get('speeding', 0) / total) | round | int) if total else 0 }}% of total</span>
+      </div>
+    </div>
+
+    <div class="bento-kpi">
+      <div class="bento-kpi-top">
+        <span class="bento-kpi-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </span>
+        <div class="bento-kpi-val">
+          <strong class="num">{{ by_type.get('honking', 0) }}</strong>
+          <span>Honking</span>
+        </div>
+      </div>
+      <div class="bento-kpi-foot">
+        <span class="bento-kpi-pill num">{{ ((100 * by_type.get('honking', 0) / total) | round | int) if total else 0 }}% of total</span>
+      </div>
+    </div>
+  </div>
+</section>
 
 <div class="cols">
-  <section class="panel">
-    <h2>By day</h2>
+  <section class="edu-card">
+    <div class="bento-head">
+      <h2>By day</h2>
+      <div class="bento-legend-inline" style="margin:0">
+        <span><i style="background:#36b397"></i>Speeding</span>
+        <span><i style="background:#d2f366"></i>Honking</span>
+      </div>
+    </div>
     {% if by_day %}
-    <div class="table-wrap"><table>
-      <thead><tr><th>Date</th><th class="r">Speeding</th><th class="r">Honking</th></tr></thead>
-      <tbody>{% for d in by_day %}<tr><td>{{ d.day }}</td><td class="r num">{{ d.s }}</td><td class="r num">{{ d.h }}</td></tr>{% endfor %}</tbody>
-    </table></div>
-    {% else %}<p class="empty">No violations in this date range.</p>{% endif %}
+      <div class="bento-chart-box" style="height:175px;margin-bottom:1rem">
+        <canvas id="report-chart"></canvas>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Date</th><th class="r">Speeding</th><th class="r">Honking</th></tr></thead>
+          <tbody>
+            {% for d in by_day %}
+              <tr>
+                <td>{{ d.day }}</td>
+                <td class="r num"><strong>{{ d.s }}</strong></td>
+                <td class="r num"><strong>{{ d.h }}</strong></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {{ empty_state("No violations were recorded in this date range.", title="No data in range") }}
+    {% endif %}
   </section>
-  <section class="panel">
-    <h2>Plates with the most violations</h2>
+
+  <section class="edu-card">
+    <div class="bento-head">
+      <h2>Plates with the most violations</h2>
+    </div>
     {% if top %}
-    <div class="table-wrap"><table>
-      <thead><tr><th>Plate</th><th>Driver</th><th class="r">Count</th></tr></thead>
-      <tbody>{% for t in top %}<tr><td><span class="plate">{{ t.plate | plate }}</span></td><td>{{ t.full_name or 'Not registered' }}</td><td class="r num">{{ t.c }}</td></tr>{% endfor %}</tbody>
-    </table></div>
-    {% else %}<p class="empty">No plates were read in this date range.</p>{% endif %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>#</th><th>Plate</th><th>Driver</th><th class="r">Count</th></tr></thead>
+          <tbody>
+            {% for t in top %}
+              <tr>
+                <td class="num muted">{{ '%02d' | format(loop.index) }}</td>
+                <td>{{ plate_badge(t.plate) }}</td>
+                <td>{{ t.full_name or 'Not registered' }}</td>
+                <td class="r num"><span class="user-metric-pill has-alert">{{ t.c }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {{ empty_state("No plates were read in this date range.", title="No plates recorded") }}
+    {% endif %}
   </section>
 </div>
+
+{% if by_day %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (typeof Chart === "undefined") return;
+  var ctx = document.getElementById("report-chart");
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: {{ by_day | map(attribute='day') | list | tojson }},
+      datasets: [
+        { label: "Honking", data: {{ by_day | map(attribute='h') | list | tojson }}, backgroundColor: "#d2f366", borderRadius: 4 },
+        { label: "Speeding", data: {{ by_day | map(attribute='s') | list | tojson }}, backgroundColor: "#36b397", borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: "#0f1014", titleColor: "#fff", bodyColor: "#d2f366", padding: 10, cornerRadius: 10 }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, border: { display: false } },
+        y: { stacked: true, beginAtZero: true, border: { display: false }, grid: { color: "#f0f2f6" }, ticks: { precision: 0 } }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

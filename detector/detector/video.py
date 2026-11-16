@@ -45,7 +45,6 @@ class FrameSource:
         else:
             yield from self._live_frames()
 
-    # ---- video file ----
     def _file_frames(self):
         cap = cv2.VideoCapture(self.source)
         if not cap.isOpened():
@@ -70,7 +69,6 @@ class FrameSource:
         finally:
             cap.release()
 
-    # ---- live stream ----
     def _no_camera_audio(self):
         """Ask for the camera's picture only. The sound of the system comes from the external microphone;
         the camera's own microphone is never requested, recorded or heard (OpenCV also never plays sound)."""

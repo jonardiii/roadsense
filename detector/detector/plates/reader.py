@@ -10,7 +10,7 @@ log = logging.getLogger("roadsense.plates")
 
 
 class PlateDetector:
-    """YOLO model trained to find licence plates (see train_plate_model.py)."""
+    """YOLO model trained to find licence plates (see training/train_plate_model.py)."""
 
     def __init__(self, weights, device="0", imgsz=640, conf=0.3):
         try:

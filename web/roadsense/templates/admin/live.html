@@ -1,18 +1,107 @@
 {% extends "app.html" %}
 {% block title %}Live camera | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><h1>Live camera</h1><p>The feed comes from the detector program running on the laptop.</p></div>
-  <div><span class="dot {{ 'on' if online }}"></span>{% if online %}Detector is online{% elif beat %}Detector last seen {{ beat | dt }}{% else %}Detector hasn't reported in yet{% endif %}</div>
-</div>
-<section class="panel">
-  <div class="live-frame">
-    {% if stream_url %}
-      <img src="{{ stream_url }}" alt="Live view of the monitored road">
-    {% else %}
-      <div><p>No live feed address is set.</p><p><a href="{{ url_for('admin.settings') }}" style="color:#fff">Add the feed address in Settings</a> once the detector is running.</p></div>
-    {% endif %}
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Live Camera</h1>
+    <p class="muted" style="margin:0">Real-time video feed streamed from the campus detector.</p>
   </div>
-  {% if info %}<p class="muted" style="margin-top:.75rem">Detector says: {{ info }}</p>{% endif %}
-</section>
+  <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+    <span class="status-pill">
+      <span class="dot {{ 'on' if online }}"></span>
+      {% if online %}Detector is online{% elif beat %}Last seen {{ beat | dt }}{% else %}Detector hasn't reported in yet{% endif %}
+    </span>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.settings') }}">Configure Feed</a>
+  </div>
+</div>
+
+<div class="repeat-layout">
+  {# Left Column: Video Feed Monitor #}
+  <section class="edu-card">
+    <div class="bento-head">
+      <div style="display:flex;align-items:center;gap:0.55rem">
+        <h2>Road Monitor</h2>
+        <span class="badge {{ 'chip-ok' if online else 'chip-dismissed' }}">
+          <span class="dot {{ 'on' if online }}" style="margin-right:0.35rem"></span>
+          {{ 'LIVE' if online else 'OFFLINE' }}
+        </span>
+      </div>
+      {% if stream_url %}
+        <button type="button" class="btn btn-outline btn-sm" id="live-fullscreen">Fullscreen</button>
+      {% endif %}
+    </div>
+
+    <div class="live-frame" id="live-frame">
+      {% if stream_url %}
+        <img src="{{ stream_url }}" alt="Live view of the monitored road">
+      {% else %}
+        <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;gap:0.75rem">
+          <div class="empty-state-icon" style="background:rgba(255,255,255,0.08);color:#d2f366;margin:0" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+          </div>
+          <div>
+            <strong style="color:#ffffff;display:block;margin-bottom:0.2rem">No live feed address is set</strong>
+            <span style="font-size:0.8rem;color:#9ca0b4">Add your detector's stream URL in Settings once it is running.</span>
+          </div>
+          <a class="btn btn-zone btn-sm" href="{{ url_for('admin.settings') }}">Add feed in Settings</a>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {# Right Column: Detector Telemetry & Quick Actions #}
+  <aside class="edu-card">
+    <div class="bento-head">
+      <h2>Detector Telemetry</h2>
+    </div>
+    <dl class="facts-list" style="margin-bottom:1.25rem">
+      <dt>Connection</dt>
+      <dd>{{ 'Online' if online else 'Offline' }}</dd>
+      <dt>Last heartbeat</dt>
+      <dd class="num">{{ (beat | dt) if beat else 'Never' }}</dd>
+      <dt>Status note</dt>
+      <dd>{{ info or '—' }}</dd>
+      <dt>Feed URL</dt>
+      <dd>{% if stream_url %}<code>{{ stream_url }}</code>{% else %}<span class="muted">Not configured</span>{% endif %}</dd>
+    </dl>
+
+    <div class="edu-schedule-list">
+      <a class="edu-sched-item" href="{{ url_for('admin.violations') }}">
+        <span class="edu-sched-icon peach" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </span>
+        <span class="edu-sched-text">
+          <strong>Recent Violations</strong>
+          <span>Review captured photos &amp; clips</span>
+        </span>
+        <span class="edu-sched-arrow" aria-hidden="true">&rsaquo;</span>
+      </a>
+      <a class="edu-sched-item" href="{{ url_for('admin.settings') }}">
+        <span class="edu-sched-icon lavender" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4"/></svg>
+        </span>
+        <span class="edu-sched-text">
+          <strong>Threshold Settings</strong>
+          <span>Adjust speed &amp; horn limits</span>
+        </span>
+        <span class="edu-sched-arrow" aria-hidden="true">&rsaquo;</span>
+      </a>
+    </div>
+  </aside>
+</div>
+
+{% if stream_url %}
+<script>
+(function () {
+  var btn = document.getElementById("live-fullscreen");
+  var frame = document.getElementById("live-frame");
+  if (btn && frame && frame.requestFullscreen) {
+    btn.addEventListener("click", function () {
+      frame.requestFullscreen();
+    });
+  }
+})();
+</script>
+{% endif %}
 {% endblock %}

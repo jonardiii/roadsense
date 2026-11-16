@@ -1,11 +1,6 @@
 {% extends "base.html" %}
+{% from "components/navbar.html" import public_navbar with context %}
 {% block body %}
-<header class="public-top">
-  <a class="brand" href="{{ url_for('auth.landing') }}"><span class="mark"></span>RoadSense</a>
-  <nav>
-    <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">Log in</a>
-    <a class="btn btn-zone btn-sm" href="{{ url_for('auth.signup') }}">Sign up</a>
-  </nav>
-</header>
+{{ public_navbar() }}
 {% block content %}{% endblock %}
 {% endblock %}

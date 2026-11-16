@@ -3,11 +3,11 @@
 {% block content %}
 <div class="page-head">
   <div><h1>{{ v.type | label }} violation</h1><p class="num">{{ v.record_id }} &middot; {{ v.detected_at | dt }}</p></div>
-  <span class="chip chip-{{ v.status }}">{{ v.status | label }}</span>
+  <span class="badge chip chip-{{ v.status }}">{{ v.status | label }}</span>
 </div>
 
 <div class="detail">
-  <section class="panel evidence">
+  <section class="card panel evidence">
     <h2>Photo evidence</h2>
     {% if v.image_path %}
       <img class="zoomable" data-zoom="{{ url_for('admin.evidence', vid=v.id) }}" title="Click to zoom" src="{{ url_for('admin.evidence', vid=v.id) }}" alt="Captured image for {{ v.record_id }}">
@@ -15,19 +15,19 @@
       <div class="noimg">No image was sent with this record.</div>
     {% endif %}
     {% if v.video_path %}
-      <h2 style="margin-top:1rem">Video clip</h2>
-      <video id="clip" controls preload="metadata" playsinline style="width:100%;border-radius:8px" src="{{ url_for('admin.clip', vid=v.id) }}"></video>
-      <button type="button" class="zoombtn" data-zoomvideo="clip">Enlarge / zoom video</button>
-      <p class="muted">About 10 seconds around the event. Use it when the photo is not clear.</p>
+      <h2 style="margin-top:1.25rem">Video clip</h2>
+      <video id="clip" controls preload="metadata" playsinline style="width:100%;border-radius:8px;border:1px solid var(--border)" src="{{ url_for('admin.clip', vid=v.id) }}"></video>
+      <div style="margin-top:.5rem"><button type="button" class="btn btn-outline btn-sm" data-zoomvideo="clip">Enlarge / zoom video</button></div>
+      <p class="muted" style="margin-top:.4rem">About 10 seconds around the event. Use it when the photo is not clear.</p>
     {% endif %}
     {% if v.audio_path %}
-      <h2 style="margin-top:1rem">Sound from the microphone</h2>
+      <h2 style="margin-top:1.25rem">Sound from the microphone</h2>
       <audio controls preload="metadata" style="width:100%" src="{{ url_for('admin.sound', vid=v.id) }}"></audio>
-      <p class="muted">The same 10 seconds, recorded by the external microphone only{% if v.type == 'honking' %}. Listen for the horn{% endif %}.</p>
+      <p class="muted" style="margin-top:.4rem">The same 10 seconds, recorded by the external microphone only{% if v.type == 'honking' %}. Listen for the horn{% endif %}.</p>
     {% endif %}
   </section>
 
-  <section class="panel">
+  <section class="card panel">
     <h2>Details</h2>
     <dl class="facts-list">
       <dt>Plate</dt><dd>{% if v.plate %}<span class="plate">{{ v.plate | plate }}</span>{% if v.plate_confidence is not none %} <span class="muted">({{ (v.plate_confidence * 100) | round | int }}% read confidence)</span>{% endif %}{% else %}Not read{% endif %}</dd>
@@ -46,19 +46,19 @@
 </div>
 
 {% if not v.plate %}
-<section class="panel">
+<section class="card panel">
   <h2>Identify the vehicle</h2>
-  <p class="muted">The system could not read the plate. If you can see it in the photo or the video clip, enter it here. The record will then count under that plate, or under the driver if the plate is registered.</p>
+  <p class="muted" style="margin-bottom:1rem">The system could not read the plate. If you can see it in the photo or the video clip, enter it here. The record will then count under that plate, or under the driver if the plate is registered.</p>
   <form method="post" action="{{ url_for('admin.set_plate', vid=v.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="field"><label for="plate">Plate number</label>
-      <input id="plate" name="plate" type="text" maxlength="12" placeholder="ABC 1234" required></div>
-    <button class="btn" type="submit">Set plate</button>
+    <div class="field" style="max-width:300px"><label class="label" for="plate">Plate number</label>
+      <input class="input" id="plate" name="plate" type="text" maxlength="12" placeholder="ABC 1234" required></div>
+    <button class="btn btn-primary" type="submit">Set plate</button>
   </form>
 </section>
 {% endif %}
 
-<section class="panel">
+<section class="card panel">
   <h2>Appeals</h2>
   {% if appeals %}
     {% for a in appeals %}
@@ -73,19 +73,34 @@
   {% endif %}
 
   {% if awaiting %}
-    <p class="muted">One microphone cannot tell which vehicle honked. Watch the clip with sound. If the vehicle marked in it really honked, confirm and the driver is texted. If the horn came from another vehicle, dismiss it.</p>
-    <form method="post" action="{{ url_for('admin.confirm_horn', vid=v.id) }}" style="display:inline">
+    <div class="alert alert-zone" style="margin-top:.75rem">
+      <span>One microphone cannot tell which vehicle honked. Watch the clip with sound. If the vehicle marked in it really honked, confirm and the driver is texted. If the horn came from another vehicle, dismiss it.</span>
+    </div>
+    <form method="post" action="{{ url_for('admin.confirm_horn', vid=v.id) }}" style="margin-bottom:1rem"
+          data-confirm="The record closes{% if v.user_id %} and the driver is texted{% endif %}. Only confirm if the clip shows this vehicle honking."
+          data-confirm-title="Confirm this horn?"
+          data-confirm-ok="Confirm horn"
+          data-confirm-variant="zone">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="btn" type="submit">Confirm horn{% if v.user_id %} and text the driver{% endif %}</button>
+      <button class="btn btn-zone" type="submit">Confirm horn{% if v.user_id %} and text the driver{% endif %}</button>
     </form>
   {% endif %}
   {% if can_review %}
     <form method="post" action="{{ url_for('admin.decide', vid=v.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="field"><label for="note">Note for the record <span class="hint">(optional)</span></label>
-        <input id="note" name="note" type="text" maxlength="500"></div>
-      <button class="btn" name="decision" value="resolved" type="submit">Close as resolved</button>
-      <button class="btn btn-danger" name="decision" value="dismissed" type="submit">Dismiss as a false detection</button>
+      <div class="field"><label class="label" for="note">Note for the record <span class="hint">(optional)</span></label>
+        <input class="input" id="note" name="note" type="text" maxlength="500"></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-primary" name="decision" value="resolved" type="submit"
+                data-confirm="The record closes as resolved and the driver's offense count is updated."
+                data-confirm-title="Close as resolved?"
+                data-confirm-ok="Close as resolved"
+                data-confirm-variant="primary">Close as resolved</button>
+        <button class="btn btn-danger" name="decision" value="dismissed" type="submit"
+                data-confirm="The record closes as a false detection. It will not count against the driver."
+                data-confirm-title="Dismiss this record?"
+                data-confirm-ok="Dismiss record">Dismiss as a false detection</button>
+      </div>
     </form>
   {% elif v.status in ('flagged', 'under_review') %}
     <p class="muted">You can review this violation once the driver sends an appeal.</p>
@@ -93,27 +108,34 @@
 </section>
 
 {% if sms_rows %}
-<section class="panel">
+<section class="card panel">
   <h2>SMS log</h2>
-  <div class="table-wrap"><table>
+  <div class="table-wrap"><table class="table">
     <thead><tr><th>Time</th><th>To</th><th>Status</th><th>Message</th></tr></thead>
     <tbody>{% for s in sms_rows %}
       <tr><td>{{ s.created_at | dt }}</td><td class="num">{{ s.phone }}</td><td>{{ s.status | capitalize }}{% if s.status in ('queued', 'failed') and s.detail %}<br><span class="muted">{{ s.detail }}</span>{% endif %}{% if s.attempts > 1 %}<br><span class="muted">{{ s.attempts }} attempts</span>{% endif %}</td><td>{{ s.message }}</td></tr>
     {% endfor %}</tbody>
   </table></div>
   {% if v.sms_status in ('queued', 'failed') %}
-  <form method="post" action="{{ url_for('admin.resend_sms', vid=v.id) }}">
+  <form method="post" action="{{ url_for('admin.resend_sms', vid=v.id) }}" style="margin-top:1rem"
+        data-confirm="The system tries to send this text message again right now."
+        data-confirm-title="Send the text again?"
+        data-confirm-ok="Send again"
+        data-confirm-variant="primary">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <p class="muted">{% if v.sms_status == 'queued' %}Waiting for the internet. It is tried again every minute.{% else %}This text was not delivered.{% endif %}</p>
-    <button class="btn" type="submit">Send the text again now</button>
+    <p class="muted" style="margin-bottom:.5rem">{% if v.sms_status == 'queued' %}Waiting for the internet. It is tried again every minute.{% else %}This text was not delivered.{% endif %}</p>
+    <button class="btn btn-outline" type="submit">Send the text again now</button>
   </form>
   {% endif %}
 </section>
 {% endif %}
-<section class="panel">
+<section class="card panel panel-danger">
   <h2>Delete this record</h2>
-  <p class="muted">Removes this violation, its photo, its appeals and its text message log. This cannot be undone. Use it for test records or false detections you do not need to keep.</p>
-  <form method="post" action="{{ url_for('admin.delete_violation', vid=v.id) }}" onsubmit="return confirm('Delete this violation and its photo? This cannot be undone.');">
+  <p class="muted" style="margin-bottom:1rem">Removes this violation, its photo, its appeals and its text message log. This cannot be undone. Use it for test records or false detections you do not need to keep.</p>
+  <form method="post" action="{{ url_for('admin.delete_violation', vid=v.id) }}"
+        data-confirm="Deletes this violation with its photo, appeals, and SMS log. This cannot be undone."
+        data-confirm-title="Delete this violation?"
+        data-confirm-ok="Delete violation">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn btn-danger" type="submit">Delete violation</button>
   </form>

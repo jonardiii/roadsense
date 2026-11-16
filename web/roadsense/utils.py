@@ -14,7 +14,6 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-# ---------- time ----------
 def now_str():
     return datetime.now(PH_TZ).strftime(FMT)
 
@@ -51,7 +50,6 @@ def fmt_dt(value):
     return f"{dt.day} {dt:%b %Y}, {dt.strftime('%I:%M %p').lstrip('0')}"
 
 
-# ---------- validation ----------
 def normalize_plate(text):
     return re.sub(r"[^A-Z0-9]", "", (text or "").upper())
 
@@ -92,7 +90,6 @@ def next_step(offense_no):
     return "Your gate pass is suspended."
 
 
-# ---------- images ----------
 def image_extension(data):
     if data[:3] == b"\xff\xd8\xff":
         return "jpg"
@@ -109,7 +106,6 @@ def is_wav(data):
     return len(data) > 44 and data[:4] == b"RIFF" and data[8:12] == b"WAVE"
 
 
-# ---------- CSRF ----------
 def csrf_token():
     if "_csrf" not in session:
         session["_csrf"] = secrets.token_urlsafe(32)
@@ -124,7 +120,6 @@ def csrf_protect():
             abort(400, "Your session expired. Reload the page and try again.")
 
 
-# ---------- current user ----------
 def load_user():
     g.user = None
     uid = session.get("uid")
@@ -151,8 +146,22 @@ def login_required(view):
     return wrapped
 
 
+def site_url():
+    """Configured production base URL (ROADSENSE_SITE_URL) or the current request origin."""
+    from flask import current_app, request
+    configured = (current_app.config.get("SITE_URL") or "").rstrip("/")
+    return configured or request.url_root.rstrip("/")
+
+
 def inject_globals():
-    return {"csrf_token": csrf_token}
+    from flask import request
+    base = site_url()
+    path = "/" if request.path == "/" else request.path.rstrip("/")
+    return {
+        "csrf_token": csrf_token,
+        "site_url": base,
+        "canonical_url": f"{base}{path}",
+    }
 
 
 LABELS = {

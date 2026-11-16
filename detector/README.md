@@ -83,18 +83,18 @@ the photo, and the administrator reads the plate by eye.
   page, choose Download Dataset, format **YOLOv11**, and unzip it to `data/roboflow_ph`.
 - Kaggle "Car License Plate Detection" by andrewmvd. Unzip it so you have an `images` and an
   `annotations` folder, then convert it:
-  `python prepare_dataset.py voc --images kaggle/images --annotations kaggle/annotations --out data/kaggle`
+  `python -m data_prep.prepare_dataset voc --images kaggle/images --annotations kaggle/annotations --out data/kaggle`
   (These are not Philippine plates, so they help the model find plates in general, not read ours.)
 - **Your own camera, which matters most.** Take the video of passing vehicles, then:
-  `python extract_frames.py --video clip.mp4 --out data/own_raw --every 5`
+  `python -m data_prep.extract_frames --video clip.mp4 --out data/own_raw --every 5`
   Upload those frames to Roboflow or CVAT, draw a box around every plate, and export as YOLOv11
   to `data/own_frames`. Aim for 200 to 300 labelled frames.
 
 **Combine and train.** Your own frames are repeated 3 times so they count for more:
 
 ```
-python prepare_dataset.py merge --inputs data/kaggle data/roboflow_ph data/own_frames --repeats 1 1 3 --out data/plates
-python train_plate_model.py --data data/plates/data.yaml
+python -m data_prep.prepare_dataset merge --inputs data/kaggle data/roboflow_ph data/own_frames --repeats 1 1 3 --out data/plates
+python training/train_plate_model.py --data data/plates/data.yaml
 ```
 
 Training prints precision, recall and mAP on images it never trained on. Put those numbers in
@@ -119,8 +119,8 @@ from your camera with a free tool (CVAT at cvat.ai, or LabelImg, which runs on y
 account), export as YOLO, and run:
 
 ```
-python prepare_dataset.py merge --inputs data/own_frames --repeats 1 --out data/plates
-python train_plate_model.py --data data/plates/data.yaml
+python -m data_prep.prepare_dataset merge --inputs data/own_frames --repeats 1 --out data/plates
+python training/train_plate_model.py --data data/plates/data.yaml
 ```
 
 The model starts from pretrained YOLO11 weights, so a few hundred frames of your own camera is enough to
@@ -189,11 +189,11 @@ dataset from your references can supply horn recordings.
 folder, naming each after its real plate, for example `ABC1234_01.jpg`:
 
 ```
-python plate_test.py --images photos --model models/plate.pt
+python plate_test.py --images samples/photos --model models/plate.pt
 ```
 
 It prints what it found and read for each photo, how many it got exactly right, and saves marked-up
-copies in `plate_test_out`. One photo per vehicle is harder than the real detector's job, which votes over
+copies in `results/plate_test_out`. One photo per vehicle is harder than the real detector's job, which votes over
 many frames, so treat the result as a lower bound.
 
 **Two text readers.** The detector can read plate characters with `easyocr` (the default, a general
@@ -201,15 +201,15 @@ reader) or `fastplate` (the fast-plate-ocr package, trained only on plate crops,
 Install the second with `pip install "fast-plate-ocr[onnx]"`, then compare them on the same photos:
 
 ```
-python distance_test.py --images photos_phone --model models/plate.pt --camera-like --ocr easyocr
-python distance_test.py --images photos_phone --model models/plate.pt --camera-like --ocr fastplate
+python distance_test.py --images samples/photos_phone --model models/plate.pt --camera-like --ocr easyocr
+python distance_test.py --images samples/photos_phone --model models/plate.pt --camera-like --ocr fastplate
 ```
 
 Use whichever reads more plates exactly right at the plate widths you expect, and set `"ocr_engine"` in
 `detector_config.json`. Note that `fastplate` reports confidence very close to 1 even on poor reads, so
 judge it by the exactly-right counts, not by its confidence numbers.
 
-**How small can a plate be?** `python distance_test.py --images photos_phone` shrinks your named photos
+**How small can a plate be?** `python distance_test.py --images samples/photos_phone` shrinks your named photos
 so the plate is 160 down to 30 pixels wide and shows where reading stops working. Plan the camera so
 plates are at least that wide.
 
@@ -259,9 +259,9 @@ To teach it the Philippine types, train it on Roboflow datasets that have those 
 1. Download the datasets from Roboflow Universe in **YOLOv11** (or YOLOv8) format and unzip each into `data\`.
    Two that have the classes: "Vehicle Classification Philippines" (thesis-vdkcz: car, truck, bus, van, jeepney,
    motorcycles, tricycles) and "Vehicle Detection PH" (vision-drive-2: 14 classes including Jeepney, Van, Tricycle).
-2. Merge them: `python prepare_vehicles.py --inputs data\ds1 data\ds2 --out data\vehicles --max-images 8000`
+2. Merge them: `python -m data_prep.prepare_vehicles --inputs data\ds1 data\ds2 --out data\vehicles --max-images 8000`
    It prints how every class name was mapped. Check that list.
-3. Train: `python train_vehicle_model.py --data data\vehicles\data.yaml --batch 8 --workers 0`
+3. Train: `python training/train_vehicle_model.py --data data\vehicles\data.yaml --batch 8 --workers 0`
 4. In `detector_config.json` set `"model": "models/vehicle.pt"` and `"vehicle_classes": []`.
 
 ## Horn placement (one microphone cannot tell direction)
@@ -331,12 +331,12 @@ The vehicle types are now: car, van, jeepney, tricycle, motorcycle, bus, truck, 
 longer taken for trucks, vans or jeepneys. Public datasets rarely have multicabs, so for those (and for any
 type the model still confuses) use frames of your own camera:
 
-1. Get sharp frames: `python extract_frames.py --video clip.mp4 --out data\own_frames --every 15`
+1. Get sharp frames: `python -m data_prep.extract_frames --video clip.mp4 --out data\own_frames --every 15`
 2. Upload them to Roboflow, draw a box on each vehicle and give it its type (use the names above), export
    as "YOLOv8" format and unzip it into `data\own_frames`.
 3. Merge it with the public sets, repeating your own frames 3 times so the model pays attention to them:
-   `python prepare_vehicles.py --inputs data\ph_vehicles1 data\ph_vehicles2 data\own_frames*3 --out data\vehicles`
+   `python -m data_prep.prepare_vehicles --inputs data\ph_vehicles1 data\ph_vehicles2 data\own_frames*3 --out data\vehicles`
 4. Train again, starting from the model you have (shorter, 30 epochs):
-   `python train_vehicle_model.py --data data\vehicles\data.yaml --model models\vehicle.pt --epochs 30`
+   `python training/train_vehicle_model.py --data data\vehicles\data.yaml --model models\vehicle.pt --epochs 30`
 
 Aim for at least 150 boxes of each type you want the model to know (the merge prints the count per type).

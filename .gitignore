@@ -12,3 +12,4 @@ web/evidence/
 *.mp4
 *.wav
 .env
+.agents/

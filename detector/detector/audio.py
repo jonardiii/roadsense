@@ -89,7 +89,6 @@ class HornDetector:
         self._cooldown_until = -1e18
         self.last = None
 
-    # -- input -------------------------------------------------------------------------------
 
     def feed(self, samples, t_start):
         """Add mono samples in -1..1 whose first sample was recorded at wall time `t_start`.
@@ -119,7 +118,6 @@ class HornDetector:
         self._buf_t0 += pos / self.sr
         return events
 
-    # -- per frame ---------------------------------------------------------------------------
 
     def _process_frame(self, frame, t):
         level_db = 10.0 * np.log10(float(np.mean(frame.astype(np.float64) ** 2)) + EPS)
@@ -203,7 +201,6 @@ class HornDetector:
         return float(power[held].sum() / total), float(self.band_freqs[top[-1]])
 
 
-# -- live microphone -----------------------------------------------------------------------------
 
 class AudioListener:
     """Reads the microphone in the background and collects horn events. Call poll() from the main
@@ -397,7 +394,6 @@ def decode_file_audio(path, sample_rate=16000, exe=None):
     return np.frombuffer(out[:len(out) // 2 * 2], "<i2").astype(np.float32) / 32768.0
 
 
-# -- files -----------------------------------------------------------------------------------------
 
 def load_wav(path):
     """Read a WAV file as mono float samples in -1..1. Returns (samples, sample_rate)."""

@@ -1,9 +1,9 @@
 """Try plate reading on ordinary photos (no camera or web system needed).
 
-  python plate_test.py --images photos --model models/plate.pt
+  python plate_test.py --images samples/photos --model models/plate.pt
 
 Takes every .jpg/.png in the folder, finds the plate, reads it, and saves a copy with the result drawn
-on it in the folder 'plate_test_out'. To get an accuracy figure, name each photo after its real plate,
+on it in the folder 'results/plate_test_out'. To get an accuracy figure, name each photo after its real plate,
 for example  ABC1234.jpg,  ABC 1234.jpg  or  NAB5678_front.png  (a second photo of the same car: ABC1234_2.jpg).  The script then counts
 how many it read exactly right.
 """
@@ -32,7 +32,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--images", required=True)
     ap.add_argument("--model", default="models/plate.pt")
-    ap.add_argument("--out", default="plate_test_out")
+    ap.add_argument("--out", default="results/plate_test_out")
     ap.add_argument("--device", default="0")
     ap.add_argument("--imgsz", type=int, default=1280, help="picture size used to search for the plate (large phone photos need more than 640)")
     ap.add_argument("--candidates", type=int, default=3, help="how many plate-like boxes to try per photo (1 = old behaviour)")

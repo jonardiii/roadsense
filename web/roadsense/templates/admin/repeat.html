@@ -1,53 +1,115 @@
 {% extends "app.html" %}
+{% from "components/table.html" import empty_state %}
+{% from "components/pagination.html" import client_pagination %}
+{% from "components/badge.html" import plate_badge %}
 {% block title %}Repeat plates | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>Repeat plates</h1>
-  <p class="muted">Vehicles not registered to any driver that have two or more violations. Use this list at the exit.</p></div></div>
 
-<section class="panel">
-  <h2>Plates with repeat violations</h2>
-  {% if rows %}
-  <table>
-    <thead><tr><th>Plate</th><th>Violations</th><th>Speeding</th><th>Honking</th><th>Vehicle</th><th>First seen</th><th>Last seen</th><th></th></tr></thead>
-    <tbody>
-    {% for r in rows %}
-      <tr>
-        <td><span class="plate">{{ r.plate | plate }}</span></td>
-        <td class="num"><strong>{{ r.n }}</strong></td>
-        <td class="num">{{ r.speeding or 0 }}</td>
-        <td class="num">{{ r.honking or 0 }}</td>
-        <td>{{ (r.kind or '-') | capitalize }}</td>
-        <td>{{ r.first_at | dt }}</td>
-        <td>{{ r.last_at | dt }}</td>
-        <td><a href="{{ url_for('admin.violations', q=r.plate) }}">View records</a></td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-    <p class="muted">No unregistered plate has repeated yet.</p>
-  {% endif %}
-</section>
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Repeat Plates &amp; Gate Watchlist</h1>
+    <p class="muted" style="margin:0">Unregistered vehicles with 2+ violations for exit gate checks, plus unreadable plates waiting for manual entry.</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('admin.violations') }}">All Violations</a>
+</div>
 
-<section class="panel">
-  <h2>Vehicles not identified yet</h2>
-  <p class="muted">The plate was not read. Open the record, check the photo and video, and enter the plate if you can see it.</p>
-  {% if unknown %}
-  <table>
-    <thead><tr><th>Record</th><th>Type</th><th>Vehicle</th><th>When</th></tr></thead>
-    <tbody>
-    {% for r in unknown %}
-      <tr>
-        <td><a href="{{ url_for('admin.violation_detail', vid=r.id) }}">{{ r.record_id }}</a></td>
-        <td>{{ r.type | label }}</td>
-        <td>{{ (r.vehicle_class or '-') | capitalize }}</td>
-        <td>{{ r.detected_at | dt }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-    <p class="muted">Nothing waiting.</p>
-  {% endif %}
-</section>
+<div class="repeat-layout">
+  {# Left Column: Repeat Unregistered Plates Watchlist #}
+  <section class="edu-card">
+    <div class="users-toolbar" style="margin-bottom:1rem">
+      <div>
+        <h2 style="margin:0 0 0.15rem">Gate Watchlist</h2>
+        <span class="muted" style="font-size:0.78rem">{{ rows | length }} unregistered plate{{ '' if rows | length == 1 else 's' }} with 2+ violations</span>
+      </div>
+      {% if rows %}
+        <div class="users-filter-input" style="max-width:250px;min-width:190px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="repeat-search" placeholder="Search plate..." aria-label="Search repeat plates">
+        </div>
+      {% endif %}
+    </div>
+
+    {% if rows %}
+      <div class="table-wrap" id="repeat-table-wrap">
+        <table class="table" id="repeat-table">
+          <thead>
+            <tr>
+              <th>Plate</th>
+              <th>Breakdown</th>
+              <th>Last Seen</th>
+              <th class="r">Total</th>
+              <th class="r"></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for r in rows %}
+            <tr data-search="{{ (r.plate ~ ' ' ~ (r.kind or '')) | lower }}">
+              <td>
+                <div class="user-contact">
+                  <div>{{ plate_badge(r.plate) }}</div>
+                  <span class="user-phone">{{ (r.kind or 'Unknown vehicle') | capitalize }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="repeat-chips">
+                  <span class="edu-tag lavender num">{{ r.speeding or 0 }} speeding</span>
+                  <span class="edu-tag peach num">{{ r.honking or 0 }} honking</span>
+                </div>
+              </td>
+              <td>
+                <div class="user-contact">
+                  <span class="user-email" style="font-size:0.8rem">{{ r.last_at | dt }}</span>
+                  <span class="user-phone">First: {{ r.first_at | dt }}</span>
+                </div>
+              </td>
+              <td class="r num">
+                <span class="repeat-count-badge">{{ r.n }}x</span>
+              </td>
+              <td class="r">
+                <a class="btn btn-outline btn-sm" href="{{ url_for('admin.violations', q=r.plate) }}">Records &rsaquo;</a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {{ empty_state("No unregistered plate matches your search.", title="No matching plates", id="repeat-empty", hidden=true) }}
+      {{ client_pagination("repeat-pager", "repeat-table", wrap_id="repeat-table-wrap", empty_id="repeat-empty", search_id="repeat-search", tab_selector=".no-tabs", page_size=10) }}
+    {% else %}
+      {{ empty_state("No unregistered plate has repeated 2 or more times yet.", title="Watchlist is clear") }}
+    {% endif %}
+  </section>
+
+  {# Right Column: Unidentified Vehicles Action Queue #}
+  <section class="edu-card repeat-queue-card">
+    <div class="bento-head">
+      <div>
+        <h2>Unidentified Queue</h2>
+        <p class="muted" style="margin:0;font-size:0.78rem">Plates not read by OCR. Inspect photo and enter manually.</p>
+      </div>
+      {% if unknown %}
+        <span class="badge chip chip-under_review num">{{ unknown | length }}</span>
+      {% endif %}
+    </div>
+
+    {% if unknown %}
+      <div class="repeat-queue-list">
+        {% for r in unknown[:10] %}
+          <a class="repeat-queue-item" href="{{ url_for('admin.violation_detail', vid=r.id) }}">
+            <div class="repeat-queue-top">
+              <strong class="num">{{ r.record_id }}</strong>
+              <span class="edu-tag {{ 'lavender' if r.type == 'speeding' else 'peach' }}">{{ r.type | label }}</span>
+            </div>
+            <div class="repeat-queue-bot">
+              <span class="muted" style="font-size:0.75rem">{{ (r.vehicle_class or 'Vehicle') | capitalize }} &middot; {{ r.detected_at | dt }}</span>
+              <span class="repeat-identify-link">Identify &rarr;</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      {{ empty_state("Every captured violation has a plate number.", title="Nothing waiting") }}
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

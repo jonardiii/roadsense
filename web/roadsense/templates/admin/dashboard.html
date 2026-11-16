@@ -1,54 +1,354 @@
 {% extends "app.html" %}
+{% from "components/badge.html" import status_badge, plate_badge %}
+{% from "components/table.html" import empty_state %}
 {% block title %}Dashboard | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head">
-  <div><h1>Dashboard</h1><p>Violations recorded on campus, last 7 days.</p></div>
-  <div class="muted"><span class="dot {{ 'on' if beat }}"></span>{% if beat %}Detector last seen {{ beat | dt }}{% else %}Detector hasn't reported in yet{% endif %}</div>
+
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Dashboard</h1>
+    <p class="muted" style="margin:0">Campus road monitoring overview for the last 7 days.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+    <span class="status-pill">
+      <span class="dot {{ 'on' if beat }}"></span>
+      {% if beat %}Detector last seen {{ beat | dt }}{% else %}Detector hasn't reported in yet{% endif %}
+    </span>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.live') }}">Live Camera</a>
+  </div>
 </div>
 
-<div class="stats">
-  <div class="stat zone"><div class="v num">{{ stats.today }}</div><div class="l">Violations today</div></div>
-  <div class="stat"><div class="v num">{{ stats.total }}</div><div class="l">Violations in total</div></div>
-  <div class="stat"><div class="v num">{{ stats.drivers }}</div><div class="l">Drivers listed</div></div>
-  <div class="stat {{ 'alert' if stats.appeals }}"><div class="v num">{{ stats.appeals }}</div><div class="l">Appeals waiting</div></div>
-  <div class="stat"><div class="v num">{{ stats.unmatched }}</div><div class="l">Plates not matched to a driver</div></div>
-  <div class="stat {{ 'alert' if stats.unverified }}"><div class="v num">{{ stats.unverified }}</div><div class="l">Plates to verify</div></div>
-</div>
-
-<div class="cols">
-  <section class="panel">
-    <h2>Violations per day</h2>
-    <div class="bars" role="img" aria-label="Violations per day for the last 7 days">
-      {% for d in chart %}
-        <div class="bar-col">
-          <span class="tot num">{{ d.total }}</span>
-          <div class="bar" style="height: {{ d.height }}%" title="{{ d.date }}: {{ d.speeding }} speeding, {{ d.honking }} honking">
-            <div class="s" style="height: {{ d.speeding_h }}%"></div>
-          </div>
-          <span class="muted">{{ d.day }}</span>
+<div class="bento-dash">
+  {# ==================== ROW 1: Today's Summary (3 Dark+Lime Cards) + Stacked Bar Chart ==================== #}
+  <div class="bento-row-top">
+    <section class="edu-card bento-summary-card">
+      <div class="bento-head">
+        <div>
+          <h2>Today's Violations</h2>
+          <p class="muted" style="margin:0;font-size:0.8rem">Campus road summary &amp; active queues</p>
         </div>
-      {% endfor %}
-    </div>
-    <div class="legend"><span><i style="background: var(--asphalt)"></i>Speeding</span><span><i style="background: var(--zone)"></i>Honking</span></div>
-  </section>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.reports_csv') }}">
+          Export
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+        </a>
+      </div>
 
-  <section class="panel">
-    <h2>Latest violations</h2>
-    {% if recent %}
-      <div class="table-wrap"><table>
-        <tbody>
-        {% for v in recent %}
-          <tr>
-            <td><a href="{{ url_for('admin.violation_detail', vid=v.id) }}">{{ v.type | label }}</a><br><span class="muted">{{ v.detected_at | dt }}</span></td>
-            <td>{% if v.plate %}<span class="plate">{{ v.plate | plate }}</span>{% else %}<span class="muted">No plate</span>{% endif %}</td>
-            <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-    {% else %}
-      <p class="empty">No violations yet. Records appear here as soon as the detector sends them.</p>
-    {% endif %}
-  </section>
+      <div class="bento-kpi-grid">
+        <a class="bento-kpi" href="{{ url_for('admin.violations') }}">
+          <div class="bento-kpi-top">
+            <span class="bento-kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+            </span>
+            <div class="bento-kpi-val">
+              <strong class="num">{{ stats.today }}</strong>
+              <span>Violations Today</span>
+            </div>
+            <span class="bento-kpi-arrow" aria-hidden="true">&#8599;</span>
+          </div>
+          <div class="bento-kpi-foot">
+            <span class="bento-kpi-pill num">{{ stats.total }} total recorded</span>
+            <span class="bento-kpi-go" aria-hidden="true">View &rsaquo;</span>
+          </div>
+        </a>
+
+        <a class="bento-kpi" href="{{ url_for('admin.violations', status='under_review') }}">
+          <div class="bento-kpi-top">
+            <span class="bento-kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <div class="bento-kpi-val">
+              <strong class="num">{{ stats.appeals }}</strong>
+              <span>Appeals Waiting</span>
+            </div>
+            <span class="bento-kpi-arrow" aria-hidden="true">&#8599;</span>
+          </div>
+          <div class="bento-kpi-foot">
+            <span class="bento-kpi-pill num">{{ stats.unverified }} {{ 'plate' if stats.unverified == 1 else 'plates' }} to verify</span>
+            <span class="bento-kpi-go" aria-hidden="true">Review &rsaquo;</span>
+          </div>
+        </a>
+
+        <a class="bento-kpi" href="{{ url_for('admin.users') }}">
+          <div class="bento-kpi-top">
+            <span class="bento-kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </span>
+            <div class="bento-kpi-val">
+              <strong class="num">{{ stats.drivers }}</strong>
+              <span>Drivers Listed</span>
+            </div>
+            <span class="bento-kpi-arrow" aria-hidden="true">&#8599;</span>
+          </div>
+          <div class="bento-kpi-foot">
+            <span class="bento-kpi-pill num">{{ stats.unmatched }} unmatched {{ 'plate' if stats.unmatched == 1 else 'plates' }}</span>
+            <span class="bento-kpi-go" aria-hidden="true">Manage &rsaquo;</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="edu-card">
+      <div class="bento-head">
+        <h2>Violation Volume</h2>
+      </div>
+      <div class="bento-chart-box" style="height:145px">
+        <canvas id="chart-volume"></canvas>
+      </div>
+      <div class="bento-legend-split">
+        <div class="bento-leg-item">
+          <span><i style="background:#36b397"></i>Speeding</span>
+          <strong class="num">{{ chart | sum(attribute='speeding') }}</strong>
+        </div>
+        <div class="bento-leg-item">
+          <span><i style="background:#d2f366"></i>Honking</span>
+          <strong class="num">{{ chart | sum(attribute='honking') }}</strong>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  {# ==================== ROW 2: Lime Featured Bar Chart + Smooth Dual-Line Trend Chart ==================== #}
+  <div class="bento-row-mid">
+    <section class="edu-card bento-lime-card">
+      <div class="bento-lime-rings" aria-hidden="true"></div>
+      <div class="bento-head" style="position:relative;z-index:1">
+        <h2>Daily Comparison</h2>
+      </div>
+      <div class="bento-chart-box" style="height:185px;position:relative;z-index:1">
+        <canvas id="chart-compare"></canvas>
+      </div>
+      <div class="bento-legend-inline" style="position:relative;z-index:1">
+        <span><i style="background:#36b397"></i>Speeding</span>
+        <span><i style="background:#0f1014"></i>Honking</span>
+      </div>
+    </section>
+
+    <section class="edu-card">
+      <div class="bento-head">
+        <h2>7-Day Activity Trend</h2>
+      </div>
+      <div class="bento-chart-box" style="height:185px">
+        <canvas id="chart-trend"></canvas>
+      </div>
+      <div class="bento-legend-inline">
+        <span><i style="background:#36b397"></i>Speeding</span>
+        <span><i style="background:#d2f366"></i>Honking</span>
+      </div>
+    </section>
+  </div>
+
+  {# ==================== ROW 3: Latest Violations Table + Detector & Queue Status ==================== #}
+  <div class="bento-row-bot">
+    <section class="edu-card">
+      <div class="bento-head">
+        <h2>Latest Violations</h2>
+        <a class="edu-view-all" href="{{ url_for('admin.violations') }}">View All</a>
+      </div>
+      {% if recent %}
+        <div class="table-wrap">
+          <table class="table bento-top-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Record &amp; Plate</th>
+                <th>Intensity</th>
+                <th class="r">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for v in recent[:5] %}
+              {% set pct = ([(v.speed_kmh or 0) * 3, 100] | min) if v.type == 'speeding' else ([(v.db_level or 80) - 20, 100] | min) %}
+              <tr>
+                <td class="num muted">{{ '%02d' | format(loop.index) }}</td>
+                <td>
+                  <a href="{{ url_for('admin.violation_detail', vid=v.id) }}" style="font-weight:600;text-decoration:none">
+                    {{ v.type | label }}
+                  </a>
+                  <span style="margin-left:0.4rem">{{ plate_badge(v.plate, "No plate") }}</span>
+                  <div class="muted" style="font-size:0.74rem">{{ v.detected_at | dt }}</div>
+                </td>
+                <td style="min-width:130px">
+                  <div class="bento-prog-track">
+                    <div class="bento-prog-bar {{ 'teal' if v.type == 'speeding' else 'lime' }}" style="width:{{ pct | int }}%"></div>
+                  </div>
+                </td>
+                <td class="r">
+                  {{ status_badge(v.status) }}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        {{ empty_state("Records appear here as soon as the detector sends them.", title="No violations yet") }}
+      {% endif %}
+    </section>
+
+    <section class="edu-card bento-status-card">
+      <div class="bento-head">
+        <h2>Campus Detector</h2>
+        <span class="status-pill"><span class="dot {{ 'on' if beat }}"></span>{{ 'Active' if beat else 'Idle' }}</span>
+      </div>
+      <p class="muted" style="font-size:0.82rem;margin-bottom:1rem">
+        {% if beat %}Last heartbeat received {{ beat | dt }}.{% else %}Detector hasn't reported in yet.{% endif %}
+      </p>
+      <div class="edu-schedule-list">
+        <a class="edu-sched-item" href="{{ url_for('admin.live') }}">
+          <span class="edu-sched-icon lime" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+          </span>
+          <span class="edu-sched-text">
+            <strong>Live Camera Feed</strong>
+            <span>Inspect real-time campus road</span>
+          </span>
+          <span class="edu-sched-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+        <a class="edu-sched-item" href="{{ url_for('admin.vehicles') }}">
+          <span class="edu-sched-icon lavender" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
+          <span class="edu-sched-text">
+            <strong>Pending Verifications</strong>
+            <span>{{ stats.unverified }} plate{{ '' if stats.unverified == 1 else 's' }} waiting</span>
+          </span>
+          <span class="edu-sched-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+        <a class="edu-sched-item" href="{{ url_for('admin.repeat') }}">
+          <span class="edu-sched-icon peach" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/></svg>
+          </span>
+          <span class="edu-sched-text">
+            <strong>Repeat Plates</strong>
+            <span>{{ stats.unmatched }} unmatched records</span>
+          </span>
+          <span class="edu-sched-arrow" aria-hidden="true">&rsaquo;</span>
+        </a>
+      </div>
+    </section>
+  </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (typeof Chart === "undefined") return;
+
+  var labels = {{ chart | map(attribute='day') | list | tojson }};
+  var speeding = {{ chart | map(attribute='speeding') | list | tojson }};
+  var honking = {{ chart | map(attribute='honking') | list | tojson }};
+
+  Chart.defaults.font.family = '"Inter", system-ui, -apple-system, sans-serif';
+  Chart.defaults.color = '#7c8091';
+
+  var tooltipStyle = {
+    backgroundColor: '#0f1014',
+    titleColor: '#ffffff',
+    bodyColor: '#d2f366',
+    padding: 10,
+    cornerRadius: 10,
+    displayColors: true
+  };
+
+  /* 1. Stacked Volume Bar Chart */
+  var volCtx = document.getElementById("chart-volume");
+  if (volCtx) {
+    new Chart(volCtx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          { label: "Honking", data: honking, backgroundColor: "#d2f366", borderRadius: 4, barThickness: 14 },
+          { label: "Speeding", data: speeding, backgroundColor: "#36b397", borderRadius: 4, barThickness: 14 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: tooltipStyle },
+        scales: {
+          x: { stacked: true, grid: { display: false }, border: { display: false } },
+          y: { stacked: true, display: false, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  /* 2. Lime Card Grouped Bar Chart */
+  var cmpCtx = document.getElementById("chart-compare");
+  if (cmpCtx) {
+    new Chart(cmpCtx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          { label: "Honking", data: honking, backgroundColor: "#0f1014", borderRadius: 4, barThickness: 8 },
+          { label: "Speeding", data: speeding, backgroundColor: "#36b397", borderRadius: 4, barThickness: 8 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: tooltipStyle },
+        scales: {
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: "#2c3808", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  /* 3. Smooth Dual-Line Spline Trend Chart */
+  var trdCtx = document.getElementById("chart-trend");
+  if (trdCtx) {
+    new Chart(trdCtx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Speeding",
+            data: speeding,
+            borderColor: "#36b397",
+            backgroundColor: "#36b397",
+            tension: 0.42,
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: "#ffffff",
+            pointBorderWidth: 2
+          },
+          {
+            label: "Honking",
+            data: honking,
+            borderColor: "#d2f366",
+            backgroundColor: "#d2f366",
+            tension: 0.42,
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: "#ffffff",
+            pointBorderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: false }, tooltip: tooltipStyle },
+        scales: {
+          x: { grid: { display: false }, border: { display: false } },
+          y: {
+            beginAtZero: true,
+            border: { display: false },
+            grid: { color: "#f0f2f6" },
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
+})();
+</script>
 {% endblock %}

@@ -1,53 +1,159 @@
 {% extends "app.html" %}
+{% from "components/table.html" import empty_state %}
+{% from "components/pagination.html" import client_pagination %}
+{% from "components/form.html" import input_field, select_field %}
+{% from "components/button.html" import button %}
 {% block title %}Vehicles | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>Vehicles</h1><p>Violations are only linked to a driver once the plate is verified against the gate pass records.</p></div></div>
 
-<section class="panel">
-  <h2>Registered plates</h2>
-  {% if rows %}
-  <div class="table-wrap"><table>
-    <thead><tr><th>Plate</th><th>Type</th><th>Driver</th><th>Gate pass</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for v in rows %}
-      <tr>
-        <td><span class="plate">{{ v.plate | plate }}</span></td>
-        <td>{{ v.vehicle_type | capitalize }}</td>
-        <td>{{ v.full_name }}</td>
-        <td>{{ v.gate_pass_no or '-' }}</td>
-        <td>{% if v.verified %}<span class="chip chip-ok">Verified</span>{% else %}<span class="chip chip-under_review">Waiting for verification</span>{% endif %}</td>
-        <td>
-          <form class="inline" method="post" action="{{ url_for('admin.verify_vehicle', vid=v.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-sm {{ 'btn-ghost' if v.verified else '' }}" type="submit">{{ 'Unverify' if v.verified else 'Verify' }}</button>
-          </form>
-          <form class="inline" method="post" action="{{ url_for('admin.delete_vehicle', vid=v.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-ghost btn-sm" type="submit">Remove</button>
-          </form>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-  {% else %}<p class="empty">No vehicles are registered yet.</p>{% endif %}
-</section>
+{% set ns = namespace(verified=0, pending=0) %}
+{% for v in rows %}
+  {% if v.verified %}
+    {% set ns.verified = ns.verified + 1 %}
+  {% else %}
+    {% set ns.pending = ns.pending + 1 %}
+  {% endif %}
+{% endfor %}
 
-<section class="panel">
-  <h2>Add a verified vehicle</h2>
-  <form method="post" action="{{ url_for('admin.add_vehicle') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="grid-2">
-      <div class="field"><label for="user_id">Driver</label>
-        <select id="user_id" name="user_id" required>
-          <option value="">Choose a driver</option>
-          {% for d in drivers %}<option value="{{ d.id }}">{{ d.full_name }}</option>{% endfor %}
-        </select></div>
-      <div class="field"><label for="plate">Plate number</label><input id="plate" name="plate" type="text" placeholder="ABC 1234" required></div>
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Vehicles &amp; Plates</h1>
+    <p class="muted" style="margin:0">Violations are only linked to a driver once the plate is verified against gate pass records.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+    <button type="button" class="btn btn-zone btn-sm" id="open-add-vehicle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add vehicle
+    </button>
+  </div>
+</div>
+
+<section class="edu-card">
+  <div class="users-toolbar">
+    <div class="users-filter-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="vehicle-search" placeholder="Search by plate, driver, type, or gate pass..." aria-label="Filter vehicles">
     </div>
-    <div class="field"><label for="vehicle_type">Vehicle type</label>
-      <select id="vehicle_type" name="vehicle_type"><option value="car">Car</option><option value="motorcycle">Motorcycle</option><option value="other">Other</option></select></div>
-    <button class="btn" type="submit">Add vehicle</button>
-  </form>
+    <div class="users-tabs" role="tablist" aria-label="Filter vehicles">
+      <button type="button" class="users-tab is-active" data-filter="all">All ({{ rows | length }})</button>
+      <button type="button" class="users-tab" data-filter="pending">Pending ({{ ns.pending }})</button>
+      <button type="button" class="users-tab" data-filter="verified">Verified ({{ ns.verified }})</button>
+    </div>
+  </div>
+
+  {% if rows %}
+    <div class="table-wrap" id="vehicles-table-wrap">
+      <table class="table" id="vehicles-table">
+        <thead>
+          <tr>
+            <th>Plate</th>
+            <th>Type</th>
+            <th>Driver</th>
+            <th>Status</th>
+            <th class="r">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for v in rows %}
+          <tr
+            data-status="{{ 'verified' if v.verified else 'pending' }}"
+            data-search="{{ (v.plate ~ ' ' ~ v.vehicle_type ~ ' ' ~ v.full_name ~ ' ' ~ (v.gate_pass_no or '')) | lower }}"
+          >
+            <td><span class="plate">{{ v.plate | plate }}</span></td>
+            <td>
+              <span class="edu-tag {{ 'lavender' if v.vehicle_type == 'car' else ('lime' if v.vehicle_type == 'motorcycle' else 'peach') }}">
+                {{ v.vehicle_type | capitalize }}
+              </span>
+            </td>
+            <td>
+              <div class="user-contact">
+                <span class="user-email">{{ v.full_name }}</span>
+                <span class="user-phone">{{ 'Gate pass: ' ~ v.gate_pass_no if v.gate_pass_no else 'No gate pass' }}</span>
+              </div>
+            </td>
+            <td>
+              {% if v.verified %}
+                <span class="badge chip chip-ok"><span class="dot on"></span>Verified</span>
+              {% else %}
+                <span class="badge chip chip-under_review">Pending</span>
+              {% endif %}
+            </td>
+            <td class="r">
+              <div style="display:inline-flex;gap:0.4rem;align-items:center">
+                <form class="inline" method="post" action="{{ url_for('admin.verify_vehicle', vid=v.id) }}"
+                      data-confirm="{{ 'Past violations for this plate stop counting for the driver until it is verified again.' if v.verified else 'Past violations for this plate will be linked to ' ~ v.full_name ~ '.' }}"
+                      data-confirm-title="{{ 'Unverify ' ~ (v.plate | plate) ~ '?' if v.verified else 'Verify ' ~ (v.plate | plate) ~ '?' }}"
+                      data-confirm-ok="{{ 'Unverify' if v.verified else 'Verify' }}"
+                      data-confirm-variant="{{ 'primary' if v.verified else 'zone' }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm {{ 'btn-outline' if v.verified else 'btn-zone' }}" type="submit">
+                    {{ 'Unverify' if v.verified else 'Verify' }}
+                  </button>
+                </form>
+                <form class="inline" method="post" action="{{ url_for('admin.delete_vehicle', vid=v.id) }}"
+                      data-confirm="Removes this plate from {{ v.full_name }}. Past violations stay on record but are no longer linked to the driver."
+                      data-confirm-title="Remove {{ v.plate | plate }}?"
+                      data-confirm-ok="Remove vehicle">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline btn-sm" type="submit">Remove</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ empty_state("Try adjusting your search or switching the verification filter.", title="No matching vehicles", id="vehicles-empty", hidden=true) }}
+    {{ client_pagination("vehicles-pager", "vehicles-table", wrap_id="vehicles-table-wrap", empty_id="vehicles-empty", search_id="vehicle-search", page_size=10) }}
+  {% else %}
+    {{ empty_state("Registered driver plates will appear here for verification.", title="No vehicles registered yet") }}
+  {% endif %}
 </section>
+
+{# Add a Verified Vehicle Modal #}
+<dialog class="edu-modal" id="add-vehicle-modal" aria-labelledby="add-vehicle-title">
+  <div class="edu-modal-head">
+    <div>
+      <h2 id="add-vehicle-title">Add a verified vehicle</h2>
+      <p class="muted" style="margin:0;font-size:0.8rem">Immediately links past violations for this plate to the selected driver.</p>
+    </div>
+    <button type="button" class="edu-modal-close" id="close-add-vehicle" aria-label="Close modal">&times;</button>
+  </div>
+  <form class="form" method="post" action="{{ url_for('admin.add_vehicle') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <label class="label" for="user_id">Driver</label>
+      <select class="select" id="user_id" name="user_id" required>
+        <option value="">Choose a driver</option>
+        {% for d in drivers %}
+          <option value="{{ d.id }}">{{ d.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {{ input_field("plate", "Plate number", placeholder="ABC 1234", required=true) }}
+    {{ select_field("vehicle_type", "Vehicle type", [('car', 'Car'), ('motorcycle', 'Motorcycle'), ('other', 'Other')]) }}
+    <div class="edu-modal-foot">
+      <button type="button" class="btn btn-outline" id="cancel-add-vehicle">Cancel</button>
+      {{ button("Add & verify vehicle", variant="primary") }}
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  var modal = document.getElementById("add-vehicle-modal");
+  var openBtn = document.getElementById("open-add-vehicle");
+  var closeBtn = document.getElementById("close-add-vehicle");
+  var cancelBtn = document.getElementById("cancel-add-vehicle");
+  if (modal && openBtn) {
+    openBtn.addEventListener("click", function () { modal.showModal(); });
+    if (closeBtn) closeBtn.addEventListener("click", function () { modal.close(); });
+    if (cancelBtn) cancelBtn.addEventListener("click", function () { modal.close(); });
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal) modal.close();
+    });
+  }
+})();
+</script>
 {% endblock %}

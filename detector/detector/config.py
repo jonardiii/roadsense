@@ -82,7 +82,23 @@ class Config:
     live_host: str = "127.0.0.1"           # this laptop only; "0.0.0.0" lets other devices on the network watch
 
 
+def _load_dotenv(path):
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, val = line.split("=", 1)
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and val and key not in os.environ:
+                os.environ[key] = val
+
+
 def load(path):
+    _load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
     with open(path, encoding="utf-8") as fh:
         raw = json.load(fh)
     known = {f.name for f in fields(Config)}
@@ -90,5 +106,6 @@ def load(path):
     if unknown:
         raise ValueError(f"Unknown setting(s) in {path}: {', '.join(unknown)}")
     cfg = Config(**raw)
+    cfg.api_url = os.environ.get("ROADSENSE_API_URL", cfg.api_url)
     cfg.api_key = os.environ.get("ROADSENSE_API_KEY", cfg.api_key)
     return cfg

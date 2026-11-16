@@ -1,0 +1,13 @@
+{# One confirmation dialog for every destructive or hard-to-undo form on the page.
+   Forms opt in with data-confirm="message" and optional data-confirm-title/-ok/-variant;
+   a submit button can override any of those for one action. #}
+{% macro confirm_dialog() -%}
+<dialog class="edu-modal confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message">
+  <h2 id="confirm-dialog-title"></h2>
+  <p class="muted" id="confirm-dialog-message"></p>
+  <div class="edu-modal-foot">
+    <button type="button" class="btn btn-outline" data-confirm-cancel>Cancel</button>
+    <button type="button" class="btn btn-danger" data-confirm-ok>Confirm</button>
+  </div>
+</dialog>
+{%- endmacro %}

@@ -1,0 +1,34 @@
+{% extends "public.html" %}
+{% from "components/form.html" import input_field, select_field %}
+{% from "components/button.html" import button %}
+{% from "components/alert.html" import flash_messages with context %}
+{% block title %}Sign up | RoadSense{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<main class="auth-wrap" id="main-content">
+  <div class="card auth-card wide">
+    <h1>Create a driver account</h1>
+    <p class="muted" style="margin-bottom:1.25rem">Use the mobile number that should receive violation alerts.</p>
+    {{ flash_messages() }}
+    <form class="form" method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="grid-2">
+        {{ input_field("full_name", "Full name", value=form.get('full_name', ''), autocomplete="name", required=true) }}
+        {{ input_field("phone", "Mobile number", type="tel", placeholder="09171234567", value=form.get('phone', ''), autocomplete="tel", required=true) }}
+      </div>
+      {{ input_field("email", "Email", type="email", value=form.get('email', ''), autocomplete="username", required=true) }}
+      <div class="grid-2">
+        {{ input_field("gate_pass_no", "Gate pass number", hint="(optional)", value=form.get('gate_pass_no', '')) }}
+        {{ input_field("plate", "Plate number", hint="(you can add it later)", placeholder="ABC 1234", value=form.get('plate', '')) }}
+      </div>
+      {{ select_field("vehicle_type", "Vehicle type", [('car', 'Car'), ('motorcycle', 'Motorcycle'), ('other', 'Other')], selected=form.get('vehicle_type', 'car')) }}
+      <div class="grid-2">
+        {{ input_field("password", "Password", type="password", hint="(8 or more characters)", autocomplete="new-password", required=true) }}
+        {{ input_field("confirm", "Confirm password", type="password", autocomplete="new-password", required=true) }}
+      </div>
+      {{ button("Create account", variant="primary", attrs='style="width:100%"') }}
+    </form>
+    <p class="auth-foot">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </div>
+</main>
+{% endblock %}

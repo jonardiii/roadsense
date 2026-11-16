@@ -1,39 +1,185 @@
 {% extends "app.html" %}
+{% from "components/alert.html" import alert %}
+{% from "components/badge.html" import status_badge, plate_badge %}
+{% from "components/table.html" import empty_state %}
 {% block title %}Dashboard | RoadSense{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>Hello, {{ g.user.full_name.split(' ')[0] }}</h1><p>Your record at the BukSU campus gate.</p></div></div>
 
-{% if unverified %}
-  <div class="step">Your plate {{ unverified | map(attribute='plate') | join(', ') }} is waiting for the Security Services office to verify it. Violations show up here after that.</div>
-{% elif not has_vehicle %}
-  <div class="step">Add your plate number under <a href="{{ url_for('user.vehicles') }}">My vehicles</a> so violations can be matched to you.</div>
-{% endif %}
-
-<div class="stats">
-  <div class="stat {{ 'alert' if total }}"><div class="v num">{{ total }}</div><div class="l">Your violations</div></div>
-  <div class="stat {{ 'zone' if open_count }}"><div class="v num">{{ open_count }}</div><div class="l">Waiting for your appeal</div></div>
-  <div class="stat"><div class="v num">{{ overall }}</div><div class="l">Violations on campus in total</div></div>
+<div class="edu-sec-head">
+  <div>
+    <h1 style="font-size:1.35rem;margin:0">Hello, {{ g.user.full_name.split(' ')[0] }}</h1>
+    <p class="muted" style="margin:0">Your driving record at the BukSU campus gate.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('user.vehicles') }}">My Vehicles</a>
+    <a class="btn btn-zone btn-sm" href="{{ url_for('user.violations') }}">My Violations</a>
+  </div>
 </div>
 
-<section class="panel">
-  <h2>Recent violations</h2>
-  {% if recent %}
-    <div class="table-wrap"><table>
-      <thead><tr><th>When</th><th>Type</th><th>Offense</th><th>Status</th><th></th></tr></thead>
-      <tbody>
-      {% for v in recent %}
-        <tr>
-          <td>{{ v.detected_at | dt }}</td>
-          <td>{{ v.type | label }}</td>
-          <td>{{ ('#' ~ v.offense_no) if v.offense_no else '-' }}</td>
-          <td><span class="chip chip-{{ v.status }}">{{ v.status | label }}</span></td>
-          <td><a href="{{ url_for('user.violation_detail', vid=v.id) }}">View</a></td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table></div>
-  {% else %}
-    <p class="empty">No violations on your record. Thanks for driving slowly and quietly.</p>
-  {% endif %}
-</section>
+{% if unverified %}
+  {% call alert(variant="step") %}Your plate {{ unverified | map(attribute='plate') | join(', ') }} is waiting for the Security Services office to verify it. Violations show up here after that.{% endcall %}
+{% elif not has_vehicle %}
+  {% call alert(variant="step") %}Add your plate number under <a href="{{ url_for('user.vehicles') }}">My vehicles</a> so violations can be matched to you.{% endcall %}
+{% endif %}
+
+<div class="bento-dash">
+  {# ==================== ROW 1: 3 Dark+Lime Bento Cards + Featured Lime Zone Card ==================== #}
+  <div class="bento-row-top">
+    <section class="edu-card bento-summary-card">
+      <div class="bento-head">
+        <div>
+          <h2>Your Record</h2>
+          <p class="muted" style="margin:0;font-size:0.8rem">Personal violations &amp; campus summary</p>
+        </div>
+        <a class="edu-view-all" href="{{ url_for('user.violations') }}">View All</a>
+      </div>
+
+      <div class="bento-kpi-grid">
+        <a class="bento-kpi" href="{{ url_for('user.violations') }}">
+          <div class="bento-kpi-top">
+            <span class="bento-kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <div class="bento-kpi-val">
+              <strong class="num">{{ total }}</strong>
+              <span>Your Violations</span>
+            </div>
+            <span class="bento-kpi-arrow" aria-hidden="true">&#8599;</span>
+          </div>
+          <div class="bento-kpi-foot">
+            <span class="bento-kpi-pill">Active record</span>
+            <span class="bento-kpi-go" aria-hidden="true">View &rsaquo;</span>
+          </div>
+        </a>
+
+        <a class="bento-kpi" href="{{ url_for('user.violations', status='flagged') }}">
+          <div class="bento-kpi-top">
+            <span class="bento-kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <div class="bento-kpi-val">
+              <strong class="num">{{ open_count }}</strong>
+              <span>Waiting Appeal</span>
+            </div>
+            <span class="bento-kpi-arrow" aria-hidden="true">&#8599;</span>
+          </div>
+          <div class="bento-kpi-foot">
+            <span class="bento-kpi-pill">{{ 'Needs response' if open_count else 'All clear' }}</span>
+            <span class="bento-kpi-go" aria-hidden="true">Appeal &rsaquo;</span>
+          </div>
+        </a>
+
+        <a class="bento-kpi" href="{{ url_for('user.vehicles') }}">
+          <div class="bento-kpi-top">
+            <span class="bento-kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </span>
+            <div class="bento-kpi-val">
+              <strong class="num">{{ overall }}</strong>
+              <span>Campus Total</span>
+            </div>
+            <span class="bento-kpi-arrow" aria-hidden="true">&#8599;</span>
+          </div>
+          <div class="bento-kpi-foot">
+            <span class="bento-kpi-pill">All vehicles</span>
+            <span class="bento-kpi-go" aria-hidden="true">Plates &rsaquo;</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="edu-card bento-lime-card">
+      <div class="bento-lime-rings" aria-hidden="true"></div>
+      <div class="bento-head" style="position:relative;z-index:1">
+        <h2>Campus Zone Rules</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem;position:relative;z-index:1">
+        <div style="background:rgba(255,255,255,0.65);border-radius:14px;padding:0.75rem 0.9rem;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.82rem;font-weight:600;color:#2c3808">Speed Limit</span>
+          <strong class="num" style="font-size:1rem;color:#0f1014">10 km/h</strong>
+        </div>
+        <div style="background:rgba(255,255,255,0.65);border-radius:14px;padding:0.75rem 0.9rem;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.82rem;font-weight:600;color:#2c3808">No-Horn Zone</span>
+          <strong class="num" style="font-size:1rem;color:#0f1014">&lt; 85 dB</strong>
+        </div>
+        <a class="btn btn-primary btn-sm" style="margin-top:0.2rem" href="{{ url_for('user.profile') }}">Update SMS Mobile Number</a>
+      </div>
+    </section>
+  </div>
+
+  {# ==================== ROW 2: Recent Violations + Offense Guide ==================== #}
+  <div class="bento-row-bot">
+    <section class="edu-card">
+      <div class="bento-head">
+        <h2>Recent Violations</h2>
+        <a class="edu-view-all" href="{{ url_for('user.violations') }}">View All</a>
+      </div>
+      {% if recent %}
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Violation &amp; Time</th>
+                <th>Plate</th>
+                <th>Offense</th>
+                <th class="r">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for v in recent %}
+              <tr>
+                <td class="num muted">{{ '%02d' | format(loop.index) }}</td>
+                <td>
+                  <a href="{{ url_for('user.violation_detail', vid=v.id) }}" style="font-weight:600;text-decoration:none">
+                    {{ v.type | label }}
+                  </a>
+                  <div class="muted" style="font-size:0.74rem">{{ v.detected_at | dt }}</div>
+                </td>
+                <td>{{ plate_badge(v.plate, "-") }}</td>
+                <td class="num"><strong>{{ ('#' ~ v.offense_no) if v.offense_no else '-' }}</strong></td>
+                <td class="r">{{ status_badge(v.status) }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        {{ empty_state("No violations on your record. Thanks for driving slowly and quietly.", title="Clean driving record") }}
+      {% endif %}
+    </section>
+
+    <section class="edu-card">
+      <div class="bento-head">
+        <h2>Offense Guide</h2>
+      </div>
+      <div class="edu-schedule-list">
+        <div class="edu-assign-card" style="background:var(--paper);box-shadow:none">
+          <span class="edu-sched-icon peach" aria-hidden="true">1</span>
+          <div class="edu-assign-info">
+            <strong>1st Offense</strong>
+            <span>Submit an online appeal or letter of apology</span>
+          </div>
+          <span class="edu-tag lavender">Step 1</span>
+        </div>
+        <div class="edu-assign-card" style="background:var(--paper);box-shadow:none">
+          <span class="edu-sched-icon lime" aria-hidden="true">2</span>
+          <div class="edu-assign-info">
+            <strong>2nd Offense</strong>
+            <span>Report to the Security Services office</span>
+          </div>
+          <span class="edu-tag lime">Step 2</span>
+        </div>
+        <div class="edu-assign-card" style="background:var(--paper);box-shadow:none">
+          <span class="edu-sched-icon apricot" aria-hidden="true">3</span>
+          <div class="edu-assign-info">
+            <strong>3rd Offense</strong>
+            <span>Campus gate pass suspension</span>
+          </div>
+          <span class="edu-tag peach">Step 3</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
 {% endblock %}
