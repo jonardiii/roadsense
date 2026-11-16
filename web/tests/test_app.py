@@ -536,7 +536,7 @@ class AppTest(unittest.TestCase):
         self.assertIn("RoadSense", html)
         self.assertIn("/login", html)
 
-        for path in ("/login", "/signup"):
+        for path in ("/login", "/signup", "/forgot-password"):
             r = c.get(path)
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.headers.get("X-Robots-Tag"), "noindex, nofollow")
@@ -555,6 +555,47 @@ class AppTest(unittest.TestCase):
         self.assertIn("<urlset", stxt)
         self.assertNotIn("/login", stxt)
         self.assertNotIn("/admin", stxt)
+
+    def test_forgot_password_flow(self):
+        self.assertEqual(self.signup(self.app.test_client()).status_code, 302)
+        c = self.app.test_client()
+        r = self.post(c, "/forgot-password", {
+            "action": "send_code",
+            "email": "juan@example.com",
+        })
+        self.assertEqual(r.status_code, 200)
+        email, code = self.app.extensions["last_reset_code"]
+        self.assertEqual(email, "juan@example.com")
+        self.assertEqual(len(code), 6)
+        self.assertNotIn(code, r.get_data(as_text=True))
+
+        bad = self.post(c, "/forgot-password", {
+            "action": "verify_code",
+            "email": "juan@example.com",
+            "code": "000000" if code != "000000" else "999999",
+        })
+        self.assertEqual(bad.status_code, 400)
+
+        verified = self.post(c, "/forgot-password", {
+            "action": "verify_code",
+            "email": "juan@example.com",
+            "code": code,
+        })
+        self.assertEqual(verified.status_code, 200)
+        self.assertIn("New password", verified.get_data(as_text=True))
+
+        ok = self.post(c, "/forgot-password", {
+            "action": "reset_password",
+            "email": "juan@example.com",
+            "password": "newpass123",
+            "confirm": "newpass123",
+        })
+        self.assertEqual(ok.status_code, 302)
+        self.assertIn("/login", ok.location)
+
+        c2 = self.app.test_client()
+        self.assertEqual(self.login(c2, "juan@example.com", "newpass123").status_code, 302)
+        self.assertEqual(c2.get("/me/").status_code, 200)
 
 
 if __name__ == "__main__":

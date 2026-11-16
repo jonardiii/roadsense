@@ -1,22 +1,596 @@
-{% extends "public.html" %}
-{% from "components/form.html" import input_field %}
-{% from "components/button.html" import button %}
+{% extends "base.html" %}
 {% from "components/alert.html" import flash_messages with context %}
-{% block title %}Log in | RoadSense{% endblock %}
+{% block title %}Sign in | RoadSense{% endblock %}
 {% block robots %}noindex, nofollow{% endblock %}
-{% block content %}
-<main class="auth-wrap" id="main-content">
-  <div class="card auth-card">
-    <h1>Log in</h1>
-    <p class="muted" style="margin-bottom:1.25rem">Enter your credentials to access your RoadSense portal.</p>
-    {{ flash_messages() }}
-    <form class="form" method="post" novalidate>
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      {{ input_field("email", "Email", type="email", value=email, placeholder="you@example.com", autocomplete="username", required=true, autofocus=true) }}
-      {{ input_field("password", "Password", type="password", autocomplete="current-password", required=true) }}
-      {{ button("Log in", variant="primary", attrs='style="width:100%"') }}
-    </form>
-    <p class="auth-foot">New driver? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+
+{% block head_extra %}
+<style>
+  .login-page {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    background: #f4f5f7;
+    overflow: hidden;
+  }
+
+  /* Subtle dashed radar rings in background corners */
+  .login-bg-rings {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .login-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(28, 29, 38, 0.08);
+  }
+
+  .login-ring--tl { width: 340px; height: 340px; top: -140px; left: -120px; }
+  .login-ring--tl-2 { width: 220px; height: 220px; top: -80px; left: -60px; }
+  .login-ring--bc { width: 420px; height: 420px; bottom: -210px; left: 42%; }
+  .login-ring--bc-2 { width: 280px; height: 280px; bottom: -140px; left: calc(42% + 70px); }
+  .login-ring--tr { width: 300px; height: 300px; top: -130px; right: -110px; }
+
+  .login-shell {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Left visual composition */
+  .login-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .gate-stage {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    padding: 28px 24px 20px;
+  }
+
+  .gate-backdrop {
+    position: absolute;
+    inset: 12px 26px 24px;
+    border-radius: 160px 160px 28px 28px;
+    background: linear-gradient(180deg, #eef9c8 0%, #e4f2b5 100%);
+    z-index: 0;
+  }
+
+  .gate-card {
+    position: relative;
+    z-index: 1;
+    background: #1c1d26;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 24px 56px rgba(28, 29, 38, 0.18);
+    color: #fff;
+  }
+
+  .gate-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #c4c7d4;
+    margin-bottom: 12px;
+  }
+
+  .gate-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #d2f366;
+  }
+
+  .gate-live::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #d2f366;
+  }
+
+  .gate-scene {
+    position: relative;
+    height: 220px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #35394b 0%, #23252f 65%, #1c1d26 100%);
+  }
+
+  .gate-road {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 120%;
+    height: 82%;
+    transform: translateX(-50%);
+    background: #2b2d3a;
+    clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%);
+  }
+
+  .gate-road::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 100%;
+    border-left: 2.5px dashed rgba(255, 255, 255, 0.45);
+    transform: translateX(-50%);
+  }
+
+  .gate-track {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    width: 80px;
+    height: 108px;
+    margin-left: -40px;
+    border: 2px solid #d2f366;
+    border-radius: 6px;
+  }
+
+  .gate-track-tag {
+    position: absolute;
+    top: -21px;
+    left: -2px;
+    background: #d2f366;
+    color: #1c1d26;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .gate-car {
+    position: absolute;
+    inset: 16px 15px 10px;
+    border-radius: 11px 11px 7px 7px;
+    background: #d2f366;
+  }
+
+  .gate-car::before,
+  .gate-car::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    height: 11px;
+    background: #1c1d26;
+    border-radius: 4px;
+  }
+
+  .gate-car::before { top: 12px; }
+  .gate-car::after { bottom: 10px; }
+
+  .gate-hud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.96);
+    color: #1c1d26;
+    border-radius: 10px;
+    padding: 8px 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  }
+
+  .gate-hud small {
+    display: block;
+    font-size: 9px;
+    font-weight: 600;
+    color: #5b5f72;
+    margin-bottom: 1px;
+  }
+
+  .gate-hud strong {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .gate-hud--plate { top: 14px; left: 14px; }
+  .gate-hud--speed { right: 14px; bottom: 18px; }
+  .gate-hud--speed strong { color: #c85a32; }
+
+  .gate-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .gate-metric {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 9px;
+    padding: 9px 10px;
+  }
+
+  .gate-metric small {
+    display: block;
+    font-size: 10px;
+    color: #a9aec0;
+    margin-bottom: 2px;
+  }
+
+  .gate-metric strong {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .gate-caption {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-right: 26px;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5b5f72;
+  }
+
+  .gate-caption-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c85a32;
+  }
+
+  /* Centered login card */
+  .login-card {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #e3e6ed;
+    border-radius: 20px;
+    padding: 42px 38px 36px;
+    box-shadow: 0 20px 50px rgba(28, 29, 38, 0.07);
+  }
+
+  .login-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto 18px;
+    text-decoration: none;
+    color: #1c1d26;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+  }
+
+  .login-brand-wrap {
+    text-align: center;
+  }
+
+  .login-brand-img {
+    height: 82px;
+    width: auto;
+    max-width: 100%;
+    display: block;
+  }
+
+  .login-brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #1c1d26;
+    display: grid;
+    place-items: center;
+  }
+
+  .login-brand span strong {
+    color: #4a7308;
+  }
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .login-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #1c1d26;
+    margin-bottom: 6px;
+  }
+
+  .login-header p {
+    font-size: 13.5px;
+    color: #5b5f72;
+    line-height: 1.5;
+  }
+
+  .login-field {
+    margin-bottom: 16px;
+  }
+
+  .login-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5b5f72;
+    margin-bottom: 7px;
+  }
+
+  .login-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .login-card .login-input-icon {
+    position: absolute;
+    left: 15px;
+    color: #7d8296;
+    pointer-events: none;
+    display: flex;
+    z-index: 2;
+  }
+
+  .login-card .login-input-wrap .login-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 44px 0 44px;
+    border: 1.5px solid #e3e6ed;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1c1d26;
+    font-size: 14.5px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .login-input::placeholder {
+    color: #8c91a4;
+  }
+
+  .login-input:focus {
+    outline: none;
+    border-color: #1c1d26;
+    box-shadow: 0 0 0 3px rgba(210, 243, 102, 0.55);
+  }
+
+  .login-eye-btn {
+    position: absolute;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: #7d8296;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .login-eye-btn:hover {
+    color: #1c1d26;
+    background: #f4f5f7;
+  }
+
+  .login-submit {
+    width: 100%;
+    height: 48px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 10px;
+    background: #1c1d26;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .login-submit:hover {
+    background: #272936;
+    transform: translateY(-1px);
+  }
+
+  .login-submit:focus-visible {
+    outline: 3px solid #d2f366;
+    outline-offset: 2px;
+  }
+
+  .login-foot {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #5b5f72;
+  }
+
+  .login-foot a {
+    color: #1c1d26;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .login-foot a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .login-back {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #7d8296;
+    text-decoration: none;
+  }
+
+  .login-back:hover {
+    color: #1c1d26;
+  }
+
+  @media (max-width: 900px) {
+    .login-shell {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    .login-visual {
+      display: none;
+    }
+
+    .login-card {
+      margin: 0 auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-page">
+  <div class="login-bg-rings" aria-hidden="true">
+    <div class="login-ring login-ring--tl"></div>
+    <div class="login-ring login-ring--tl-2"></div>
+    <div class="login-ring login-ring--bc"></div>
+    <div class="login-ring login-ring--bc-2"></div>
+    <div class="login-ring login-ring--tr"></div>
   </div>
-</main>
+
+  <main id="main-content" class="login-shell">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-brand-wrap">
+        <a href="{{ url_for('auth.landing') }}" class="login-brand" aria-label="RoadSense home">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="RoadSense — Sense the Road" class="login-brand-img">
+        </a>
+      </div>
+
+      <div class="login-header">
+        <h1 id="login-title">Login</h1>
+        <p>Sign in with your verified RoadSense portal credentials</p>
+      </div>
+
+      {{ flash_messages() }}
+
+      <form method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="login-field">
+          <label class="login-label" for="email">Email</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+            </span>
+            <input
+              class="login-input"
+              id="email"
+              name="email"
+              type="email"
+              value="{{ email or '' }}"
+              placeholder="Enter your email"
+              autocomplete="username"
+              required
+              autofocus
+            >
+          </div>
+        </div>
+
+        <div class="login-field">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
+            <label class="login-label" for="password" style="margin-bottom:0;">Password</label>
+            <a href="{{ url_for('auth.forgot_password') }}" style="font-size:12px;font-weight:600;color:#4a7308;text-decoration:none;">Forgot password?</a>
+          </div>
+          <div class="login-input-wrap">
+            <span class="login-input-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+            <input
+              class="login-input"
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            >
+            <button
+              type="button"
+              class="login-eye-btn"
+              id="togglePassword"
+              aria-label="Show password"
+              aria-pressed="false"
+            >
+              <svg id="eyeOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg id="eyeClosed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                <line x1="2" x2="22" y1="2" y2="22" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="login-submit">
+          <span>Sign in</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </button>
+      </form>
+
+      <p class="login-foot">
+        New to RoadSense? <a href="{{ url_for('auth.signup') }}">Create an account</a>
+      </p>
+      <a href="{{ url_for('auth.landing') }}" class="login-back">Back to RoadSense home</a>
+    </section>
+  </main>
+</div>
+
+<script>
+  (() => {
+    const btn = document.getElementById("togglePassword");
+    const input = document.getElementById("password");
+    const eyeOpen = document.getElementById("eyeOpen");
+    const eyeClosed = document.getElementById("eyeClosed");
+    if (!btn || !input) return;
+    btn.addEventListener("click", () => {
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.setAttribute("aria-pressed", String(show));
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      eyeOpen.hidden = show;
+      eyeClosed.hidden = !show;
+    });
+  })();
+</script>
 {% endblock %}

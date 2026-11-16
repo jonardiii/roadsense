@@ -58,11 +58,11 @@
   --radius: 0.75rem;
 
   /* Sidebar tokens */
-  --sidebar: #1c1d26;
-  --sidebar-foreground: #f4f5f7;
-  --sidebar-muted: #9498ab;
-  --sidebar-accent: #272936;
-  --sidebar-border: #2a2c3b;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #181920;
+  --sidebar-muted: #5b5f72;
+  --sidebar-accent: #f4f5f7;
+  --sidebar-border: #ebedf2;
 
   /* Typography & Shadows */
   --head: "Inter", "Barlow", system-ui, -apple-system, sans-serif;
@@ -101,7 +101,7 @@ a:hover { color: var(--asphalt); text-decoration-color: var(--asphalt); }
    ========================================================================== */
 .shell {
   display: grid;
-  grid-template-columns: 252px 1fr;
+  grid-template-columns: 272px 1fr;
   min-height: 100vh;
 }
 
@@ -119,10 +119,10 @@ a:hover { color: var(--asphalt); text-decoration-color: var(--asphalt); }
 }
 
 .side .brand, .public-top .brand {
-  font: 700 1.25rem/1 var(--head); color: #ffffff !important; text-decoration: none !important;
+  font: 700 1.25rem/1 var(--head); color: var(--ink) !important; text-decoration: none !important;
   display: inline-flex; align-items: center; gap: 0.7rem; letter-spacing: -0.02em;
 }
-.side .brand { padding: 0 10px 26px; }
+.side .brand { padding: 0 8px 22px; }
 
 .brand-logo { position: relative; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .brand-logo.sm { width: 22px; height: 22px; }
@@ -138,7 +138,7 @@ a:hover { color: var(--asphalt); text-decoration-color: var(--asphalt); }
   display: flex; align-items: center; gap: 12px; transition: background-color 0.16s ease, color 0.16s ease;
 }
 .side nav a svg { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
-.side nav a:hover { background-color: rgba(255, 255, 255, 0.06); color: #ffffff; }
+.side nav a:hover { background-color: var(--sidebar-accent); color: var(--ink); }
 .side nav a[aria-current=page] {
   background-color: var(--zone); color: var(--ink); font-weight: 600;
   box-shadow: var(--shadow-xs);

@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "skills": {
+    "audit-codebase": {
+      "source": "Drakaniia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/audit-codebase/SKILL.md",
+      "computedHash": "6df3c1193f4fbb103e2e9978bdd9e9f662f2eaa08bc97ada98b34f2ea58581c5"
+    },
+    "code-design": {
+      "source": "Drakaniia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-design/SKILL.md",
+      "computedHash": "eeaff4b3551e561d8fb848685e720fa79da985ebdf35b000efb3d76429d3f481"
+    },
+    "codebase-health": {
+      "source": "Drakaniia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/codebase-health/SKILL.md",
+      "computedHash": "e990b152dc8a267e6dd621093eb85bc2de494716c313557531ab8d37ba252bb6"
+    },
+    "folder-architecture": {
+      "source": "Drakaniia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/folder-architecture/SKILL.md",
+      "computedHash": "b974118e80ea11ced135daebb84762b6817b60abfc438959b36b8593d877964a"
+    },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "commit": "d41d9860b0094dcb68030657da63461212835aaa",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "077889e9782761360c17acbc2522af320d0dd0f928b09cd90884fa304f443a34"
+    },
+    "implement-folder-architecture": {
+      "source": "Drakaniia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/implement-folder-architecture/SKILL.md",
+      "computedHash": "1c9097a280a0564769eeabf36291bdd5c9f95b3e3a7e4aefc2d98ae692a4d412"
+    },
+    "migrate-radix-to-base": {
+      "source": "shadcn-ui/ui",
+      "sourceType": "github",
+      "skillPath": "skills/migrate-radix-to-base/SKILL.md",
+      "computedHash": "7644de21e9aa533904def58c30f809ae6574c3cabc6396ab8b03dee751e8ffbe"
+    },
+    "shadcn": {
+      "source": "shadcn-ui/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "388962d16c7a4f13aaeee0d8f128e50a87df8553d42ef7988c39c0e1c74a40e8"
+    }
+  }
+}

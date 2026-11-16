@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en-PH">
 <head>
@@ -10,8 +9,8 @@
   <title>RoadSense | Smart Campus Traffic Monitoring – BukSU</title>
   <link rel="canonical" href="{{ canonical_url }}" />
 
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}" />
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}?v=2" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}?v=2" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="RoadSense" />
@@ -20,7 +19,6 @@
   <meta property="og:description" content="RoadSense is Bukidnon State University's smart campus traffic monitoring system for vehicle detection, speed monitoring, license plate recognition, and horn detection." />
   <meta property="og:url" content="{{ canonical_url }}" />
   <meta property="og:image" content="{{ site_url }}{{ url_for('static', filename='og-image.png') }}" />
-
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="RoadSense | Smart Campus Traffic Monitoring System – BukSU" />
   <meta name="twitter:description" content="Bukidnon State University's smart campus traffic monitoring system for vehicle detection, speed monitoring, license plate recognition, and horn detection." />
@@ -39,1054 +37,395 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --navy: #1c1d26;
-      --navy-hover: #272936;
+      --navy-2: #272936;
       --lime: #d2f366;
       --lime-soft: #eef9c8;
       --lime-ink: #2c3808;
-      --lavender: #5b46e5;
-      --lavender-soft: #ede9fe;
+      --lime-text: #4a7308;
+      --accent: #d2f366;
+      --accent-soft: #eef9c8;
+      --green: #55820a;
       --peach: #c85a32;
       --peach-soft: #fdeae1;
-      --teal: #36b397;
       --off-white: #f4f5f7;
-      --muted: #64687a;
-      --white: #ffffff;
-      --border: #ebedf2;
+      --muted: #5b5f72;
+      --border: #e3e6ed;
+      --nav-h: 88px;
     }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
+    body { font-family: "DM Sans", system-ui, sans-serif; background: var(--off-white); color: var(--navy); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; color: inherit; }
+    button { font: inherit; cursor: pointer; }
+    .container { width: min(1160px, 90%); margin: auto; }
+    :focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; border-radius: 6px; }
+    .skip { position: absolute; left: -999px; top: 8px; background: var(--navy); color: #fff; padding: 10px 16px; border-radius: 8px; z-index: 200; }
+    .skip:focus { left: 8px; }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* NAV */
+    .navbar { height: var(--nav-h); display: flex; align-items: center; background: rgba(244,245,247,.92); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
+    .nav-content { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; font-family: "Space Grotesk", sans-serif; font-size: 25px; font-weight: 700; letter-spacing: -1px; }
+    .brand-logo-img { height: 92px; width: auto; display: block; }
+    .brand-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--navy); flex: none; }
+    .brand-name span { color: var(--lime-text); }
+    .nav-links { display: flex; gap: 6px; font-size: 14px; font-weight: 600; color: var(--muted); }
+    .nav-links a { padding: 8px 14px; border-radius: 8px; transition: .15s; }
+    .nav-links a:hover { color: var(--navy); background: #e9ebf1; }
+    .nav-links a[aria-current="true"] { color: var(--navy); background: var(--accent-soft); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .menu-toggle { display: none; border: none; background: transparent; color: var(--navy); padding: 6px; }
 
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: "DM Sans", sans-serif;
-      background: var(--off-white);
-      color: var(--navy);
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    button {
-      font: inherit;
-      cursor: pointer;
-    }
-
-    .container {
-      width: min(1160px, 90%);
-      margin: auto;
-    }
-
-    /* NAVIGATION */
-    .navbar {
-      height: 82px;
-      display: flex;
-      align-items: center;
-      background: rgba(244, 245, 247, 0.92);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(12px);
-    }
-
-    .nav-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      font-family: "Space Grotesk", sans-serif;
-      font-size: 25px;
-      font-weight: 700;
-      letter-spacing: -1px;
-    }
-
-    .brand-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      background: var(--navy);
-      color: var(--lime);
-    }
-
-    .brand span {
-      color: var(--lavender);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--muted);
-    }
-
-    .nav-links a:hover {
-      color: var(--navy);
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 13px 23px;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 14px;
-      transition: 0.2s ease;
-      border: none;
-    }
-
-    .btn-dark {
-      background: var(--navy);
-      color: white;
-    }
-
-    .btn-dark:hover {
-      background: var(--navy-hover);
-      transform: translateY(-2px);
-    }
-
-    .btn-lime {
-      background: var(--lime);
-      color: var(--navy);
-    }
-
-    .btn-lime:hover {
-      background: #dcf87a;
-      transform: translateY(-2px);
-    }
-
-    .btn-outline {
-      background: transparent;
-      color: var(--navy);
-      border: 1.5px solid #d7dbe4;
-    }
-
-    .btn-outline:hover {
-      background: var(--white);
-      border-color: var(--navy);
-      transform: translateY(-2px);
-    }
-
-    .btn-ghost-light {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--white);
-      border: 1.5px solid rgba(255, 255, 255, 0.24);
-    }
-
-    .btn-ghost-light:hover {
-      background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.45);
-      transform: translateY(-2px);
-    }
-
-    .cta-actions {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 13px 22px; border-radius: 10px; font-weight: 700; font-size: 14px; transition: .2s; border: 1.5px solid transparent; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-dark { background: var(--navy); color: #fff; }
+    .btn-dark:hover { background: var(--navy-2); }
+    .btn-lime { background: var(--lime); color: var(--navy); }
+    .btn-lime:hover { background: #dcf87a; }
+    .btn-outline { color: var(--navy); border-color: #cfd4df; }
+    .btn-outline:hover { background: #fff; border-color: var(--navy); }
+    .btn-ghost-light { color: #fff; border-color: rgba(255,255,255,.3); }
+    .btn-ghost-light:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.55); }
 
     /* HERO */
-    .hero {
-      padding: 90px 0 100px;
-      overflow: hidden;
-    }
+    .hero { padding: 80px 0 96px; overflow: hidden; }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1.05fr; align-items: center; gap: 60px; }
+    .pill { display: inline-flex; align-items: center; gap: 9px; background: var(--accent); color: var(--navy); padding: 8px 14px; border-radius: 30px; font-size: 13px; font-weight: 700; margin-bottom: 24px; }
+    .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--navy); }
+    .hero h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(42px, 5.2vw, 66px); line-height: 1.05; letter-spacing: -3px; margin-bottom: 22px; }
+    .hero h1 em { font-style: normal; color: var(--lime-text); }
+    .hero-description { max-width: 480px; color: var(--muted); line-height: 1.75; font-size: 17px; margin-bottom: 30px; }
+    .hero-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px; }
+    .hero-buttons .btn { padding: 15px 28px; font-size: 15px; }
+    .hero-facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; font-weight: 600; color: var(--muted); list-style: none; }
+    .hero-facts li { display: flex; align-items: center; gap: 8px; }
+    .hero-facts li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--peach); }
 
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      gap: 65px;
-    }
+    /* CAMERA VISUAL (the one animated moment) */
+    .hero-visual { background: var(--navy); border-radius: 24px; padding: 18px; box-shadow: 0 25px 70px rgba(36,35,55,.2); }
+    .visual-top { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
+    .live { display: flex; align-items: center; gap: 7px; color: var(--lime); }
+    .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); animation: blink 1.6s infinite; }
+    .scene { height: 320px; border-radius: 14px; position: relative; overflow: hidden; background: linear-gradient(180deg, #3b3f52, #23252f 60%, #1c1d26); }
+    .road { position: absolute; bottom: 0; left: 50%; width: 130%; height: 78%; transform: translateX(-50%); background: #2b2d3a; clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%); }
+    .road::after { content: ""; position: absolute; left: 50%; top: 0; height: 100%; border-left: 3px dashed rgba(255,255,255,.5); transform: translateX(-50%); }
+    .track { position: absolute; left: 50%; bottom: 22px; width: 96px; height: 130px; margin-left: -48px; animation: approach 6s ease-in infinite; transform-origin: 50% 100%; }
+    .car { position: absolute; inset: 22px 20px 12px; border-radius: 13px 13px 8px 8px; background: var(--lime); }
+    .car::before, .car::after { content: ""; position: absolute; left: 6px; right: 6px; height: 13px; background: var(--navy); border-radius: 5px; }
+    .car::before { top: 14px; }
+    .car::after { bottom: 12px; }
+    .box { position: absolute; inset: 0; border: 2px solid var(--lime); border-radius: 6px; }
+    .box span { position: absolute; top: -22px; left: -2px; background: var(--lime); color: var(--navy); padding: 3px 8px; font-size: 10px; font-weight: 800; border-radius: 4px; white-space: nowrap; }
+    .hud { position: absolute; padding: 11px 15px; border-radius: 11px; background: rgba(255,255,255,.96); box-shadow: 0 8px 25px rgba(0,0,0,.18); animation: pop 6s infinite; }
+    .hud small { display: block; color: var(--muted); font-size: 10px; font-weight: 600; margin-bottom: 2px; }
+    .hud strong { font-size: 18px; font-family: "Space Grotesk", sans-serif; }
+    .hud-plate { top: 18px; left: 16px; animation-delay: 0s; }
+    .hud-speed { right: 16px; bottom: 28px; }
+    .hud-speed strong { color: var(--peach); }
+    .hud-speed em { display: block; font-style: normal; font-size: 11px; font-weight: 700; color: var(--peach); margin-top: 2px; }
+    .visual-foot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    .stat { color: #fff; background: rgba(255,255,255,.07); border-radius: 10px; padding: 11px 13px; }
+    .stat small { display: block; color: #a9aec0; font-size: 11px; margin-bottom: 3px; }
+    .stat strong { font-size: 14px; }
+    .wave { display: inline-flex; align-items: center; gap: 2px; height: 14px; margin-left: 6px; vertical-align: middle; }
+    .wave i { width: 3px; border-radius: 2px; background: var(--lime); animation: wave 1.1s ease-in-out infinite; }
+    .wave i:nth-child(1) { height: 5px; } .wave i:nth-child(2) { height: 11px; animation-delay: .15s; } .wave i:nth-child(3) { height: 7px; animation-delay: .3s; } .wave i:nth-child(4) { height: 12px; animation-delay: .45s; }
+    @keyframes approach { 0% { transform: translateY(-150px) scale(.42); opacity: 0; } 12% { opacity: 1; } 75%, 100% { transform: translateY(0) scale(1); opacity: 1; } }
+    @keyframes pop { 0%, 40% { opacity: 0; transform: translateY(6px); } 52%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+    @keyframes wave { 50% { transform: scaleY(.4); } }
+    @keyframes blink { 50% { opacity: .35; } }
 
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      background: var(--lavender-soft);
-      color: var(--lavender);
-      padding: 9px 14px;
-      border-radius: 30px;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 25px;
-    }
+    /* SECTIONS */
+    section { scroll-margin-top: var(--nav-h); }
+    .section-heading { max-width: 620px; margin-bottom: 44px; }
+    .section-heading h2 { font-family: "Space Grotesk", sans-serif; font-size: clamp(30px, 4vw, 42px); letter-spacing: -1.5px; line-height: 1.12; margin-bottom: 14px; }
+    .section-heading p { color: var(--muted); line-height: 1.7; font-size: 16px; }
 
-    .eyebrow-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--lavender);
-    }
+    .features { padding: 90px 0; background: #fff; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .feature { padding: 30px; background: #fff; transition: background .2s; }
+    .feature:hover { background: #fbfdf2; }
+    .feature-icon { width: 46px; height: 46px; display: grid; place-items: center; background: var(--accent-soft); color: var(--lime-ink); border-radius: 12px; margin-bottom: 20px; }
+    .feature-icon.lime { background: var(--lime-soft); color: var(--lime-ink); }
+    .feature-icon.peach { background: var(--peach-soft); color: var(--peach); }
+    .feature h3 { font-family: "Space Grotesk", sans-serif; font-size: 18px; margin-bottom: 8px; }
+    .feature p { color: var(--muted); font-size: 14px; line-height: 1.7; }
 
-    .hero h1 {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(42px, 5vw, 64px);
-      line-height: 1.08;
-      letter-spacing: -3px;
-      margin-bottom: 24px;
-    }
+    .how-it-works { padding: 90px 0; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; position: relative; list-style: none; }
+    .steps::before { content: ""; position: absolute; top: 49px; left: 16%; right: 16%; border-top: 2px dashed #cfd4df; }
+    .step { position: relative; padding: 28px; border-radius: 16px; background: #fff; border: 1px solid var(--border); }
+    .step-number { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: var(--lime); font-family: "Space Grotesk", sans-serif; font-weight: 700; margin-bottom: 20px; }
+    .step h3 { font-family: "Space Grotesk", sans-serif; font-size: 19px; margin-bottom: 8px; }
+    .step p { color: var(--muted); font-size: 14px; line-height: 1.7; }
 
-    .hero h1 span {
-      color: var(--lavender);
-    }
+    .roles { padding: 90px 0; background: #fff; }
+    .role-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+    .role { border-top: 3px solid var(--navy); padding-top: 18px; }
+    .role:nth-child(2) { border-color: var(--peach); }
+    .role:nth-child(3) { border-color: var(--lime); }
+    .role h3 { font-family: "Space Grotesk", sans-serif; font-size: 20px; margin-bottom: 8px; }
+    .role p { color: var(--muted); font-size: 15px; line-height: 1.7; }
 
-    .hero-description {
-      max-width: 510px;
-      color: var(--muted);
-      line-height: 1.8;
-      font-size: 16px;
-      margin-bottom: 32px;
-    }
+    .cta { padding: 80px 0; background: var(--navy); color: #fff; }
+    .cta .container { display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+    .cta h2 { font-family: "Space Grotesk", sans-serif; font-size: clamp(30px, 4vw, 42px); letter-spacing: -1.5px; margin-bottom: 12px; }
+    .cta p { color: #c4c7d4; max-width: 560px; line-height: 1.7; }
+    .cta-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
-    .hero-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 13px;
-      margin-bottom: 35px;
-    }
-
-    .hero-note {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .hero-note strong {
-      color: var(--navy);
-    }
-
-    /* HERO VISUAL */
-    .hero-visual {
-      min-height: 440px;
-      background: var(--navy);
-      border-radius: 25px;
-      padding: 20px;
-      position: relative;
-      box-shadow: 0 25px 70px rgba(36, 35, 55, 0.18);
-      overflow: hidden;
-    }
-
-    .visual-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      font-size: 12px;
-      margin-bottom: 18px;
-    }
-
-    .live-indicator {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      color: var(--lime);
-      font-weight: 700;
-    }
-
-    .live-indicator::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--lime);
-      box-shadow: 0 0 10px var(--lime);
-    }
-
-    .camera-scene {
-      height: 290px;
-      border-radius: 15px;
-      position: relative;
-      overflow: hidden;
-      background:
-        linear-gradient(180deg, rgba(28, 29, 38, 0.08), rgba(28, 29, 38, 0.55)),
-        linear-gradient(135deg, #50566b, #2b2e3d 55%, #1c1d26);
-    }
-
-    .road {
-      position: absolute;
-      bottom: -30px;
-      left: 25%;
-      width: 55%;
-      height: 230px;
-      background: #272936;
-      clip-path: polygon(37% 0, 63% 0, 100% 100%, 0 100%);
-    }
-
-    .road::after {
-      content: "";
-      position: absolute;
-      left: 49%;
-      top: 0;
-      height: 100%;
-      border-left: 3px dashed rgba(255,255,255,.65);
-    }
-
-    .road-car {
-      position: absolute;
-      bottom: 55px;
-      left: 48%;
-      width: 48px;
-      height: 80px;
-      border-radius: 13px 13px 8px 8px;
-      background: var(--lime);
-      border: 3px solid white;
-      box-shadow: 0 0 0 2px var(--lime);
-    }
-
-    .road-car::before,
-    .road-car::after {
-      content: "";
-      position: absolute;
-      left: 5px;
-      right: 5px;
-      height: 12px;
-      background: var(--navy);
-      border-radius: 5px;
-    }
-
-    .road-car::before {
-      top: 12px;
-    }
-
-    .road-car::after {
-      bottom: 10px;
-    }
-
-    .detection-box {
-      position: absolute;
-      left: 40%;
-      bottom: 45px;
-      width: 85px;
-      height: 105px;
-      border: 2px solid var(--lime);
-      border-radius: 5px;
-    }
-
-    .detection-label {
-      position: absolute;
-      top: -25px;
-      left: -2px;
-      background: var(--lime);
-      color: var(--navy);
-      padding: 4px 8px;
-      font-size: 9px;
-      font-weight: 800;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-
-    .hud-card {
-      position: absolute;
-      padding: 12px 15px;
-      border-radius: 11px;
-      background: rgba(255,255,255,.95);
-      box-shadow: 0 8px 25px rgba(0,0,0,.15);
-    }
-
-    .hud-card small {
-      display: block;
-      color: var(--muted);
-      font-size: 9px;
-      margin-bottom: 4px;
-    }
-
-    .hud-card strong {
-      font-size: 16px;
-      font-family: "Space Grotesk", sans-serif;
-    }
-
-    .plate-card {
-      top: 65px;
-      left: 15px;
-    }
-
-    .speed-card {
-      right: 15px;
-      bottom: 35px;
-    }
-
-    .speed-card strong {
-      color: var(--peach);
-    }
-
-    .visual-footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .visual-stat {
-      flex: 1;
-      color: white;
-      background: rgba(255,255,255,.08);
-      border-radius: 10px;
-      padding: 12px;
-    }
-
-    .visual-stat small {
-      color: #a0a5b8;
-      display: block;
-      font-size: 10px;
-      margin-bottom: 5px;
-    }
-
-    .visual-stat strong {
-      font-size: 14px;
-    }
-
-    /* FEATURES */
-    .features {
-      padding: 95px 0;
-      background: white;
-    }
-
-    .section-heading {
-      text-align: center;
-      max-width: 650px;
-      margin: 0 auto 50px;
-    }
-
-    .section-heading .eyebrow {
-      margin-bottom: 15px;
-    }
-
-    .section-heading h2 {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(30px, 4vw, 43px);
-      letter-spacing: -1.5px;
-      margin-bottom: 15px;
-    }
-
-    .section-heading p {
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 15px;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .feature-card {
-      padding: 30px;
-      border: 1px solid var(--border);
-      border-radius: 17px;
-      transition: .25s ease;
-      background: white;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(28, 29, 38, 0.08);
-      border-color: var(--lavender);
-    }
-
-    .feature-icon {
-      width: 49px;
-      height: 49px;
-      display: grid;
-      place-items: center;
-      background: var(--lavender-soft);
-      color: var(--lavender);
-      border-radius: 13px;
-      margin-bottom: 22px;
-    }
-
-    .feature-card:nth-child(2) .feature-icon,
-    .feature-card:nth-child(5) .feature-icon {
-      background: var(--lime-soft);
-      color: var(--lime-ink);
-    }
-
-    .feature-card:nth-child(4) .feature-icon {
-      background: var(--peach-soft);
-      color: var(--peach);
-    }
-
-    .feature-card h3 {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .feature-card p {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    /* HOW IT WORKS */
-    .how-it-works {
-      padding: 95px 0;
-      background: var(--off-white);
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 25px;
-    }
-
-    .step {
-      padding: 28px;
-      border-radius: 16px;
-      background: white;
-    }
-
-    .step-number {
-      width: 39px;
-      height: 39px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: var(--lime);
-      font-weight: 800;
-      margin-bottom: 22px;
-    }
-
-    .step h3 {
-      font-family: "Space Grotesk", sans-serif;
-      margin-bottom: 10px;
-    }
-
-    .step p {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    /* CTA */
-    .cta {
-      padding: 75px 0;
-      background: var(--navy);
-      color: white;
-      text-align: center;
-    }
-
-    .cta h2 {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(30px, 4vw, 42px);
-      margin-bottom: 15px;
-    }
-
-    .cta p {
-      color: #c4c7d4;
-      max-width: 580px;
-      margin: 0 auto 28px;
-      line-height: 1.7;
-      font-size: 14px;
-    }
-
-    /* FOOTER */
-    footer {
-      background: #14151c;
-      color: white;
-      padding: 30px 0;
-    }
-
-    footer .brand span {
-      color: var(--lime);
-    }
-
-    .footer-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .footer-content p {
-      color: #9ca0b3;
-      font-size: 12px;
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 20px;
-      color: #c4c7d4;
-      font-size: 12px;
-    }
-
-    /* MOBILE */
-    .menu-toggle {
-      display: none;
-      border: none;
-      background: transparent;
-      color: var(--navy);
-      font-size: 25px;
-    }
+    footer { background: #14151c; color: #fff; padding: 30px 0; }
+    footer .brand { background: #ffffff; padding: 6px 12px; border-radius: 10px; }
+    footer .brand-logo-img { height: 64px; }
+    .footer-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .footer-content p { color: #a3a7ba; font-size: 13px; }
+    .footer-links { display: flex; gap: 20px; color: #c4c7d4; font-size: 13px; }
+    .footer-links a:hover { color: #fff; }
 
     @media (max-width: 900px) {
-      .hero-grid {
-        grid-template-columns: 1fr;
-        gap: 45px;
-      }
-
-      .hero {
-        padding-top: 65px;
-      }
-
-      .hero-visual {
-        max-width: 650px;
-        width: 100%;
-        margin: auto;
-      }
-
-      .feature-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .nav-links {
-        gap: 16px;
-      }
+      .hero-grid { grid-template-columns: 1fr; gap: 45px; }
+      .hero { padding-top: 56px; }
+      .hero-visual { max-width: 640px; width: 100%; margin: auto; }
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
-    @media (max-width: 650px) {
-      .navbar {
-        height: 70px;
-      }
-
-      .brand {
-        font-size: 22px;
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-
-      .nav-links {
-        display: none;
-        position: absolute;
-        top: 70px;
-        left: 0;
-        right: 0;
-        padding: 25px 5%;
-        background: var(--off-white);
-        border-bottom: 1px solid var(--border);
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .nav-links.open {
-        display: flex;
-      }
-
-      .nav-actions .btn {
-        padding: 10px 14px;
-        font-size: 12px;
-      }
-
-      .hero {
-        padding: 55px 0 70px;
-      }
-
-      .hero h1 {
-        letter-spacing: -2px;
-      }
-
-      .hero-visual {
-        min-height: 390px;
-        padding: 13px;
-      }
-
-      .camera-scene {
-        height: 260px;
-      }
-
-      .feature-grid,
-      .steps {
-        grid-template-columns: 1fr;
-      }
-
-      .features,
-      .how-it-works {
-        padding: 70px 0;
-      }
-
-      .footer-content {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .visual-footer {
-        gap: 6px;
-      }
-
-      .visual-stat {
-        padding: 9px;
-      }
-
-      .visual-stat strong {
-        font-size: 11px;
-      }
+    @media (max-width: 760px) {
+      :root { --nav-h: 68px; }
+      .menu-toggle { display: block; }
+      .nav-links { display: none; position: absolute; top: var(--nav-h); left: 0; right: 0; padding: 16px 5% 22px; background: var(--off-white); border-bottom: 1px solid var(--border); flex-direction: column; }
+      .nav-links.open { display: flex; }
+      .nav-actions .btn-outline { display: none; }
+      .hero h1 { letter-spacing: -2px; }
+      .scene { height: 270px; }
+      .feature-grid, .steps, .role-list { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .role-list { gap: 28px; }
+      .features, .how-it-works, .roles { padding: 64px 0; }
+      .cta .container, .footer-content { flex-direction: column; text-align: center; }
+      .cta .container { align-items: center; }
+      .cta-actions { justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .hud { opacity: 1; }
     }
   </style>
 </head>
 
 <body>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- NAVIGATION -->
   <header class="navbar">
     <div class="container nav-content">
-      <a href="#" class="brand">
-        <div class="brand-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="8" stroke="#d2f366" stroke-width="2.75" />
-            <circle cx="12" cy="12" r="3" fill="#c85a32" />
-          </svg>
-        </div>
-        Road<span>Sense</span>
+      <a href="#home" class="brand" aria-label="RoadSense home">
+        <img src="{{ url_for('static', filename='logo1.png') }}" alt="RoadSense — Sense the Road" class="brand-logo-img">
       </a>
 
-      <nav class="nav-links" id="navLinks">
+      <nav class="nav-links" id="navLinks" aria-label="Main">
         <a href="#home">Home</a>
-        <a href="#about">About</a>
         <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#users">Who uses it</a>
       </nav>
 
       <div class="nav-actions">
-        <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Sign In</a>
-        <a href="{{ url_for('auth.signup') }}" class="btn btn-dark">Sign Up</a>
-        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="4" y1="6" x2="20" y2="6" />
-            <line x1="4" y1="12" x2="20" y2="12" />
-            <line x1="4" y1="18" x2="20" y2="18" />
-          </svg>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Sign in</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-dark">Sign up</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navLinks">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /></svg>
         </button>
       </div>
     </div>
   </header>
 
-  <main>
-    <!-- HERO SECTION -->
+  <main id="main">
     <section class="hero" id="home">
       <div class="container hero-grid">
-
-        <div class="hero-content">
-          <div class="eyebrow">
-            <span class="eyebrow-dot"></span>
-            BUKIDNON STATE UNIVERSITY
-          </div>
-
-          <h1>
-            See the Road.<br>
-            Hear the Traffic.<br>
-            <span>Monitor Smarter.</span>
-          </h1>
-
+        <div>
+          <div class="pill">Bukidnon State University</div>
+          <h1>See the road.<br>Hear the traffic.<br><em>Monitor smarter.</em></h1>
           <p class="hero-description">
-            RoadSense is a smart campus traffic monitoring system
-            designed to help Bukidnon State University monitor
-            vehicles, detect road violations, and promote safer
-            campus roads.
+            RoadSense watches campus roads with a camera and microphone. It spots speeding, reads license plates, and picks up horn events, so Security Services can review each case with evidence.
           </p>
-
           <div class="hero-buttons">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-dark">Sign In ↗</a>
-            <a href="{{ url_for('auth.signup') }}" class="btn btn-lime">Sign Up</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-dark">Sign in</a>
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-lime">Create an account</a>
           </div>
-
-          <div class="hero-note">
-            <strong>●</strong>
-            Smart monitoring for a safer campus environment.
-          </div>
+          <ul class="hero-facts">
+            <li>Photo, video, and audio evidence</li>
+            <li>SMS alerts to verified drivers</li>
+          </ul>
         </div>
 
-        <!-- SYSTEM VISUAL PREVIEW -->
-        <div class="hero-visual">
+        <div class="hero-visual" role="img" aria-label="Illustration of the RoadSense camera view tracking a vehicle, reading its plate, and measuring its speed">
           <div class="visual-top">
-            <strong>ROADSENSE / CAMERA 01</strong>
-            <span class="live-indicator">MONITORING</span>
+            <span>ROADSENSE / CAMERA 01</span>
+            <span class="live">Monitoring</span>
           </div>
-
-          <div class="camera-scene">
+          <div class="scene" aria-hidden="true">
             <div class="road"></div>
-            <div class="road-car"></div>
-
-            <div class="detection-box">
-              <span class="detection-label">VEHICLE DETECTED</span>
+            <div class="track">
+              <div class="car"></div>
+              <div class="box"><span>VEHICLE DETECTED</span></div>
             </div>
-
-            <div class="hud-card plate-card">
-              <small>LICENSE PLATE</small>
-              <strong>ABC 1234</strong>
-            </div>
-
-            <div class="hud-card speed-card">
-              <small>VEHICLE SPEED</small>
-              <strong>42 km/h</strong>
-            </div>
+            <div class="hud hud-plate"><small>License plate</small><strong>ABC 1234</strong></div>
+            <div class="hud hud-speed"><small>Vehicle speed</small><strong>42 km/h</strong><em>Flagged for review</em></div>
           </div>
-
-          <div class="visual-footer">
-            <div class="visual-stat">
-              <small>VEHICLES</small>
-              <strong>Detection</strong>
-            </div>
-            <div class="visual-stat">
-              <small>ROAD SPEED</small>
-              <strong>Monitoring</strong>
-            </div>
-            <div class="visual-stat">
-              <small>HORN EVENTS</small>
-              <strong>Detection</strong>
-            </div>
+          <div class="visual-foot" aria-hidden="true">
+            <div class="stat"><small>Vehicle</small><strong>Tracked</strong></div>
+            <div class="stat"><small>Plate</small><strong>Matched</strong></div>
+            <div class="stat"><small>Horn</small><strong>Listening<span class="wave"><i></i><i></i><i></i><i></i></span></strong></div>
           </div>
         </div>
-
       </div>
     </section>
 
-    <!-- ABOUT SECTION -->
-    <section class="features" id="about">
+    <section class="features" id="features">
       <div class="container">
         <div class="section-heading">
-          <div class="eyebrow">ABOUT ROADSENSE</div>
-          <h2>Intelligent Monitoring for Campus Roads</h2>
-          <p>
-            RoadSense combines computer vision and audio detection
-            to help authorized university personnel monitor campus
-            road activity and manage recorded traffic violations.
-          </p>
+          <h2>Intelligent monitoring for campus roads</h2>
+          <p>RoadSense combines computer vision and audio detection to help authorized university personnel monitor road activity and manage recorded violations.</p>
         </div>
 
-        <div class="feature-grid" id="features">
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-                <circle cx="7" cy="17" r="2" />
-                <path d="M9 17h6" />
-                <circle cx="17" cy="17" r="2" />
-              </svg>
-            </div>
-            <h3>Vehicle Detection</h3>
-            <p>
-              Detects and tracks vehicles passing through the
-              monitored campus gate using a camera.
-            </p>
+        <div class="feature-grid">
+          <article class="feature">
+            <div class="feature-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg></div>
+            <h3>Vehicle detection</h3>
+            <p>Detects and tracks vehicles passing through the monitored campus gate.</p>
           </article>
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m12 14 4-4" />
-                <path d="M3.34 19a10 10 0 1 1 17.32 0" />
-              </svg>
-            </div>
-            <h3>Speed Monitoring</h3>
-            <p>
-              Estimates vehicle speed and records detected
-              speeding events for authorized review.
-            </p>
+          <article class="feature">
+            <div class="feature-icon lime" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></svg></div>
+            <h3>Speed monitoring</h3>
+            <p>Estimates vehicle speed and records speeding events for authorized review.</p>
           </article>
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="6" width="18" height="12" rx="2" />
-                <path d="M7 12h2" />
-                <path d="M12 12h5" />
-              </svg>
-            </div>
-            <h3>License Plate Recognition</h3>
-            <p>
-              Reads vehicle plate numbers and matches them
-              against verified registered vehicles.
-            </p>
+          <article class="feature">
+            <div class="feature-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 12h2" /><path d="M12 12h5" /></svg></div>
+            <h3>License plate recognition</h3>
+            <p>Reads plate numbers and matches them against verified registered vehicles.</p>
           </article>
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-              </svg>
-            </div>
-            <h3>Horn Detection</h3>
-            <p>
-              Uses audio detection to identify possible horn
-              events and preserve recordings for review.
-            </p>
+          <article class="feature">
+            <div class="feature-icon peach" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></svg></div>
+            <h3>Horn detection</h3>
+            <p>Uses audio detection to identify possible horn events and keep recordings for review.</p>
           </article>
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
-            <h3>SMS Notifications</h3>
-            <p>
-              Sends violation notifications to verified drivers
-              through the configured SMS service.
-            </p>
+          <article class="feature">
+            <div class="feature-icon lime" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg></div>
+            <h3>SMS notifications</h3>
+            <p>Sends violation notices to verified drivers through the configured SMS service.</p>
           </article>
-
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </div>
-            <h3>Violation Management</h3>
-            <p>
-              Helps Security Services review evidence, manage
-              appeals, and track progressive campus offenses.
-            </p>
+          <article class="feature">
+            <div class="feature-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></svg></div>
+            <h3>Violation management</h3>
+            <p>Helps Security Services review evidence, handle appeals, and track repeat offenses.</p>
           </article>
-
         </div>
       </div>
     </section>
 
-    <!-- HOW IT WORKS -->
     <section class="how-it-works" id="how-it-works">
       <div class="container">
-
         <div class="section-heading">
-          <div class="eyebrow">HOW IT WORKS</div>
-          <h2>From Detection to Review</h2>
-          <p>
-            RoadSense supports the campus monitoring process
-            through three main steps.
-          </p>
+          <h2>From detection to review</h2>
+          <p>Every record follows the same three steps, from the roadside to the web portal.</p>
         </div>
-
-        <div class="steps">
-
-          <article class="step">
-            <div class="step-number">01</div>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-number">1</div>
             <h3>Monitor</h3>
-            <p>
-              The roadside detector uses a camera and microphone
-              to monitor vehicle movement, speed, license plates,
-              and possible horn events.
-            </p>
-          </article>
-
-          <article class="step">
-            <div class="step-number">02</div>
+            <p>The roadside detector uses a camera and microphone to watch vehicle movement, speed, license plates, and possible horn events.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">2</div>
             <h3>Record</h3>
-            <p>
-              When a possible violation is detected, RoadSense
-              captures supporting photo, video, and audio evidence
-              and sends the record to the web portal.
-            </p>
-          </article>
-
-          <article class="step">
-            <div class="step-number">03</div>
+            <p>When a possible violation is detected, RoadSense captures photo, video, and audio evidence and sends the record to the web portal.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">3</div>
             <h3>Review</h3>
-            <p>
-              Authorized personnel review violation records,
-              verify details, manage appeals, and handle
-              notifications according to campus procedures.
-            </p>
-          </article>
+            <p>Authorized personnel check the details, handle appeals, and send notifications following campus procedures.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
 
+    <section class="roles" id="users">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Built for the people who use campus roads</h2>
+          <p>One portal, with the right view for each group.</p>
+        </div>
+        <div class="role-list">
+          <div class="role">
+            <h3>Security Services</h3>
+            <p>Review evidence, confirm violations, and decide on appeals from one queue.</p>
+          </div>
+          <div class="role">
+            <h3>Drivers</h3>
+            <p>Register your vehicle, get notified of violations by SMS, and see the evidence behind each record.</p>
+          </div>
+          <div class="role">
+            <h3>Administrators</h3>
+            <p>Manage accounts and keep the system running according to campus policy.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA -->
     <section class="cta">
       <div class="container">
-        <h2>Building Safer Campus Roads.</h2>
-        <p>
-          RoadSense supports Bukidnon State University's efforts
-          to monitor campus traffic and promote responsible
-          road use through intelligent technology.
-        </p>
+        <div>
+          <h2>Building safer campus roads.</h2>
+          <p>RoadSense supports Bukidnon State University's efforts to monitor campus traffic and promote responsible road use.</p>
+        </div>
         <div class="cta-actions">
-          <a href="{{ url_for('auth.signup') }}" class="btn btn-lime">Sign Up ↗</a>
-          <a href="{{ url_for('auth.login') }}" class="btn btn-ghost-light">Sign In</a>
+          <a href="{{ url_for('auth.signup') }}" class="btn btn-lime">Create an account</a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-ghost-light">Sign in</a>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- FOOTER -->
   <footer>
     <div class="container footer-content">
-      <a href="#" class="brand">
-        <div class="brand-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="8" stroke="#d2f366" stroke-width="2.75" />
-            <circle cx="12" cy="12" r="3" fill="#c85a32" />
-          </svg>
-        </div>
-        Road<span>Sense</span>
+      <a href="#home" class="brand" aria-label="RoadSense home">
+        <img src="{{ url_for('static', filename='logo1.png') }}" alt="RoadSense — Sense the Road" class="brand-logo-img">
       </a>
-
       <p>© 2026 RoadSense. Bukidnon State University.</p>
-
-      <div class="footer-links">
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
+      <nav class="footer-links" aria-label="Footer">
         <a href="#features">Features</a>
-        <a href="{{ url_for('auth.login') }}">Sign In</a>
-        <a href="{{ url_for('auth.signup') }}">Sign Up</a>
-      </div>
+        <a href="#how-it-works">How it works</a>
+        <a href="{{ url_for('auth.login') }}">Sign in</a>
+        <a href="{{ url_for('auth.signup') }}">Sign up</a>
+      </nav>
     </div>
   </footer>
 
   <script>
-    // Toggle the mobile navigation menu
     const menuToggle = document.getElementById("menuToggle");
     const navLinks = document.getElementById("navLinks");
+    const setMenu = open => {
+      navLinks.classList.toggle("open", open);
+      menuToggle.setAttribute("aria-expanded", open);
+    };
+    menuToggle.addEventListener("click", () => setMenu(!navLinks.classList.contains("open")));
+    navLinks.querySelectorAll("a").forEach(a => a.addEventListener("click", () => setMenu(false)));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
 
-    menuToggle.addEventListener("click", () => {
-      navLinks.classList.toggle("open");
-    });
-
-    // Close the menu after selecting a navigation link
-    document.querySelectorAll(".nav-links a").forEach(link => {
-      link.addEventListener("click", () => {
-        navLinks.classList.remove("open");
+    // Highlight the nav link for the section in view
+    const links = [...navLinks.querySelectorAll("a")];
+    const sections = links.map(a => document.querySelector(a.getAttribute("href")));
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        links.forEach(a => a.removeAttribute("aria-current"));
+        links[sections.indexOf(en.target)]?.setAttribute("aria-current", "true");
       });
-    });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    sections.forEach(s => s && io.observe(s));
   </script>
-
 </body>
 </html>

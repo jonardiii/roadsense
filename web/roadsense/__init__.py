@@ -98,7 +98,7 @@ def create_app(test_config=None):
         from flask import request
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
-        if request.path.startswith(("/admin", "/me", "/api", "/login", "/signup", "/logout")):
+        if request.path.startswith(("/admin", "/me", "/api", "/login", "/signup", "/forgot-password", "/logout")):
             resp.headers.setdefault("X-Robots-Tag", "noindex, nofollow")
         return resp
 

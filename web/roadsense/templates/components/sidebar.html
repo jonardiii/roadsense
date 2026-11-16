@@ -2,12 +2,8 @@
 
 {% macro sidebar(user, ep, csrf_tok) -%}
   <aside class="side">
-    <a class="brand" href="{{ url_for('auth.landing') }}">
-      <span class="brand-logo" aria-hidden="true">
-        <span class="brand-ring"></span>
-        <span class="brand-dot"></span>
-      </span>
-      <span>RoadSense</span>
+    <a class="brand" href="{{ url_for('auth.landing') }}" style="justify-content:center;">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="RoadSense — Sense the Road" style="height:48px;width:auto;max-width:100%;display:block;">
     </a>
 
     <nav aria-label="Main">
