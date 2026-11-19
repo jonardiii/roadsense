@@ -102,7 +102,7 @@ def signup():
         plate = utils.normalize_plate(form["plate"])
         if plate and not utils.valid_plate(plate):
             errors.append("Check the plate number. Use letters and digits, like ABC1234.")
-        vtype = form["vehicle_type"] if form["vehicle_type"] in ("car", "motorcycle", "other") else "car"
+        vtype = utils.clean_vehicle_type(form["vehicle_type"])
 
         conn = db.get_db()
         if not errors:

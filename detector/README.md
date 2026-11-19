@@ -324,10 +324,10 @@ matched to the vehicles in that very picture (no `video_lag_s` shift is needed: 
 clip and sound clip of each violation use the file's sound too. Needs `imageio-ffmpeg`. Live streams
 (YouTube live, RTSP) are video only; their sound is not used.
 
-## Pickups and multicabs (and other types the model confuses)
+## Multicabs (and other types the model confuses)
 
-The vehicle types are now: car, van, jeepney, tricycle, motorcycle, bus, truck, **pickup, multicab**. Pickups
-(Hilux, Strada, Navara...) are no longer merged into "car", and multicabs have their own type, so they are no
+The vehicle types are: car, van, jeepney, tricycle, motorcycle, bus, truck, **multicab**. Pickups
+(Hilux, Strada, Navara...) are merged into "car", and multicabs have their own type, so they are no
 longer taken for trucks, vans or jeepneys. Public datasets rarely have multicabs, so for those (and for any
 type the model still confuses) use frames of your own camera:
 

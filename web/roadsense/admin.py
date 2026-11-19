@@ -466,8 +466,7 @@ def vehicles():
 def add_vehicle():
     conn = db.get_db()
     plate = utils.normalize_plate(request.form.get("plate", ""))
-    vtype = request.form.get("vehicle_type")
-    vtype = vtype if vtype in ("car", "motorcycle", "other") else "car"
+    vtype = utils.clean_vehicle_type(request.form.get("vehicle_type"))
     owner = conn.execute("SELECT id FROM users WHERE id = ? AND role = 'user'",
                          (request.form.get("user_id", 0),)).fetchone()
     if not owner or not utils.valid_plate(plate):

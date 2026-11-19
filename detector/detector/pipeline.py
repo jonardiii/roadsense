@@ -10,7 +10,7 @@ log = logging.getLogger("roadsense.pipeline")
 
 # Only these kinds of thing are ever measured or reported. People, animals, bicycles and anything
 # else that moves are ignored, whatever the detector model is able to see.
-VEHICLE_KINDS = ("car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "pickup", "multicab")
+VEHICLE_KINDS = ("car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "multicab")
 
 
 def _iou(a, b):

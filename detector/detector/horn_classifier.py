@@ -124,9 +124,10 @@ class HornClassifier:
         """What the sound is: a Judgement with the horn, voice and alarm scores and the three strongest sounds."""
         best = self.features(samples, sample_rate)    # strongest moment of each sound class
         top = [(self.names.get(int(i), f"class {int(i)}"), float(best[i])) for i in np.argsort(best)[::-1][:3]]
+        voice = float(best[list(VOICE_CLASSES)].max())
+        alarm = float(best[list(ALARM_CLASSES)].max())
         if self.head is not None:                      # the layer trained on horn recordings decides
             x = logit_features(best)
             z = float(((x - self.head["mean"]) / self.head["std"]) @ self.head["w"] + self.head["b"])
-            return Judgement(horn=float(_sigmoid(z)), voice=0.0, alarm=0.0, top=top)
-        return Judgement(horn=float(best[list(HORN_CLASSES)].max()), voice=float(best[list(VOICE_CLASSES)].max()),
-                         alarm=float(best[list(ALARM_CLASSES)].max()), top=top)
+            return Judgement(horn=float(_sigmoid(z)), voice=voice, alarm=alarm, top=top)
+        return Judgement(horn=float(best[list(HORN_CLASSES)].max()), voice=voice, alarm=alarm, top=top)

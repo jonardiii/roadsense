@@ -14,9 +14,12 @@ class PlateDetector:
 
     def __init__(self, weights, device="0", imgsz=640, conf=0.3):
         try:
+            import torch
             from ultralytics import YOLO
         except ImportError as exc:
             raise RuntimeError("Install the detector packages first: pip install -r requirements.txt") from exc
+        if str(device).lower() != "cpu" and not torch.cuda.is_available():
+            device = "cpu"
         self.model = YOLO(weights)
         self.kw = dict(conf=conf, imgsz=imgsz, device=device, verbose=False)
 

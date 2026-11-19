@@ -79,6 +79,20 @@ class AppTest(unittest.TestCase):
         cfg = c.get("/api/v1/config", headers={"X-API-Key": self.key}).get_json()
         self.assertEqual(cfg["speed_limit_kmh"], 10.0)
 
+    def test_all_detector_vehicle_types_can_be_registered(self):
+        page = self.app.test_client().get("/signup").get_data(as_text=True)
+        for kind in ("tricycle", "jeepney", "van", "multicab", "truck", "bus"):
+            self.assertIn(f'value="{kind}"', page)
+        c = self.app.test_client()
+        self.assertEqual(self.signup(c, vehicle_type="tricycle").status_code, 302)
+        self.post(c, "/me/vehicles", {"plate": "TRI 5678", "vehicle_type": "multicab"})
+        self.post(c, "/me/vehicles", {"plate": "BAD 9999", "vehicle_type": "spaceship"})
+        with self.app.app_context():
+            kinds = dict(db.get_db().execute("SELECT plate, vehicle_type FROM vehicles").fetchall())
+        self.assertEqual(kinds["ABC1234"], "tricycle")
+        self.assertEqual(kinds["TRI5678"], "multicab")
+        self.assertEqual(kinds["BAD9999"], "car")
+
     def test_signup_validation_and_login(self):
         c = self.app.test_client()
         self.assertEqual(self.signup(c, phone="12345").status_code, 400)

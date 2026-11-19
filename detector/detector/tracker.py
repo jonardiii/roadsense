@@ -15,9 +15,12 @@ class YoloTracker:
     def __init__(self, weights="yolo11s.pt", device="0", imgsz=960, conf=0.35, iou=0.5,
                  classes=(2, 3, 5, 7), tracker="bytetrack.yaml"):
         try:
+            import torch
             from ultralytics import YOLO
         except ImportError as exc:
             raise RuntimeError("Install the detector packages first: pip install -r requirements.txt") from exc
+        if str(device).lower() != "cpu" and not torch.cuda.is_available():
+            device = "cpu"
         self.model = YOLO(weights)
         # an empty list means every class of the model (a model trained on RoadSense vehicle classes)
         self.kw = dict(conf=conf, iou=iou, imgsz=imgsz, classes=list(classes) or None, device=device,

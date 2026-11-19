@@ -110,7 +110,7 @@ class VehicleClassMappingTests(unittest.TestCase):
     def test_roboflow_class_names_map_to_roadsense_classes(self):
         from data_prep.prepare_vehicles import map_class
         cases = {"Jeepney": "jeepney", "jeep": "jeepney", "Tricycles": "tricycle", "tuk-tuk": "tricycle",
-                 "Van": "van", "Motorcycles": "motorcycle", "Pickup-Truck": "pickup", "Toyota Hilux": "pickup", "Multicab": "multicab", "Multi-Cab": "multicab", "Trailer-Truck": "truck",
+                 "Van": "van", "Motorcycles": "motorcycle", "Pickup-Truck": "car", "Toyota Hilux": "car", "Multicab": "multicab", "Multi-Cab": "multicab", "Trailer-Truck": "truck",
                  "Flatbed-Truck": "truck", "UV Express": "van", "Modern Jeepney": "jeepney", "Private Vehicles": "car",
                  "Taxi": "car", "SUV": "car", "Light Truck": "truck", "Minibus": "van", "Bus": "bus", "Car": "car", "Bicycle": None, "E-Bike": None,
                  "person": None}

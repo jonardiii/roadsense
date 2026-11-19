@@ -26,7 +26,7 @@ def tiny_model(path):
         helper.make_node("Mul", ["m2", "w"], ["p"]),
         helper.make_node("Add", ["p", "b"], ["z"]),
         helper.make_node("Sigmoid", ["z"], ["y"]),
-    ]
+    ] 
     g = helper.make_graph(
         nodes, "tiny",
         [helper.make_tensor_value_info("x", TensorProto.FLOAT, [15600])],
@@ -39,8 +39,8 @@ def tiny_model(path):
     onnx.save(m, path)
 
 
-@unittest.skipIf(onnx is None, "onnx package not installed")
 class HornModelTests(unittest.TestCase):
+    @unittest.skipIf(onnx is None, "onnx package not installed")
     def test_classifier_and_listener_filter(self):
         from detector.horn_classifier import HornClassifier
         with tempfile.TemporaryDirectory() as d:
@@ -75,11 +75,27 @@ class HornModelTests(unittest.TestCase):
             self.assertIn("Vehicle horn", kept[0].sound_note)      # the administrator can see what was heard
 
     def test_judgement_rules(self):
-        from detector.horn_classifier import Judgement
+        from detector.horn_classifier import HornClassifier, Judgement
         self.assertTrue(Judgement(0.8, 0.1, 0.1).accepted(0.3))
         self.assertFalse(Judgement(0.2, 0.0, 0.0).accepted(0.3))     # not sure enough
         self.assertFalse(Judgement(0.5, 0.7, 0.0).accepted(0.3))     # someone shouting is stronger
         self.assertFalse(Judgement(0.5, 0.0, 0.9).accepted(0.3))     # a siren is stronger
+
+        # Even with a fine-tuned head loaded, judge() must populate voice & alarm scores so shouting/sirens are vetoed
+        clf = HornClassifier.__new__(HornClassifier)
+        clf.names = {302: "Vehicle horn", 6: "Shout", 317: "Siren"}
+        clf.head = {
+            "w": np.zeros(521, dtype=np.float64),
+            "b": 2.0,   # sigmoid(2.0) ~= 0.88
+            "mean": np.zeros(521, dtype=np.float64),
+            "std": np.ones(521, dtype=np.float64),
+        }
+        fake_scores = np.full(521, 0.01, dtype=np.float32)
+        fake_scores[6] = 0.95   # very strong Shout
+        clf.features = lambda samples, sr: fake_scores
+        verdict = clf.judge(np.zeros(16000, dtype=np.float32), 16000)
+        self.assertAlmostEqual(verdict.voice, 0.95, places=2)
+        self.assertFalse(verdict.accepted(0.8))
 
 
 if __name__ == "__main__":

@@ -440,7 +440,7 @@ class VehicleKindTests(unittest.TestCase):
         return pipe, sender
 
     def test_the_vehicle_kind_is_sent_with_the_violation(self):
-        for name in ("car", "motorcycle", "bus", "truck"):
+        for name in ("car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "multicab"):
             _, sender = self.run_kind(name)
             self.assertEqual(sender.sent[0][0]["vehicle_class"], name)
 

@@ -372,9 +372,9 @@
             </span>
             <select class="auth-select" id="vehicle_type" name="vehicle_type">
               {% set vt = form.get('vehicle_type', 'car') %}
-              <option value="car" {% if vt == 'car' %}selected{% endif %}>Car</option>
-              <option value="motorcycle" {% if vt == 'motorcycle' %}selected{% endif %}>Motorcycle</option>
-              <option value="other" {% if vt == 'other' %}selected{% endif %}>Other</option>
+              {% for value, label in vehicle_type_choices %}
+              <option value="{{ value }}" {% if vt == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
             </select>
           </div>
         </div>

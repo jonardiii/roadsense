@@ -15,14 +15,16 @@ class Config:
     source: str = ""
     calibration: str = "calibration.json"
 
-    # Vehicle detection
-    model: str = "yolo11s.pt"
+    # Vehicle detection. models/vehicle.pt is trained on the RoadSense types (car, van, jeepney,
+    # tricycle, motorcycle, bus, truck...); an empty vehicle_classes list keeps all of its classes.
+    # If that file is missing, load() falls back to the generic yolo11s.pt (COCO car/motorcycle/bus/truck).
+    model: str = "models/vehicle.pt"
     device: str = "0"                      # "0" = first GPU, "cpu" = no GPU
     imgsz: int = 960
     conf: float = 0.35
     iou: float = 0.5
     tracker: str = "bytetrack.yaml"
-    vehicle_classes: list = field(default_factory=lambda: [2, 3, 5, 7])  # car, motorcycle, bus, truck
+    vehicle_classes: list = field(default_factory=list)
 
     # Speed. A vehicle is flagged above (speed limit + margin). Choose the margin from the
     # measured error of your own validation runs, not by guessing.
@@ -97,6 +99,35 @@ def _load_dotenv(path):
                 os.environ[key] = val
 
 
+DETECTOR_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+FALLBACK_MODEL = "yolo11s.pt"
+COCO_VEHICLE_CLASSES = [2, 3, 5, 7]   # car, motorcycle, bus, truck in the generic COCO model
+
+
+def resolve_model(cfg):
+    """Find the detector model files, or fall back to the generic COCO model when vehicle.pt is missing."""
+    for attr in ("plate_model", "horn_model", "horn_head"):
+        val = getattr(cfg, attr, "")
+        if val and not os.path.isabs(val) and not os.path.exists(val):
+            beside = os.path.join(DETECTOR_ROOT, val)
+            if os.path.exists(beside):
+                setattr(cfg, attr, beside)
+    path = cfg.model
+    if os.path.isabs(path) or os.path.exists(path):
+        return cfg
+    beside = os.path.join(DETECTOR_ROOT, path)
+    if os.path.exists(beside):
+        cfg.model = beside
+        return cfg
+    if path.endswith(".pt") and os.path.basename(path) != FALLBACK_MODEL:
+        print(f"Vehicle model {path} not found; using {FALLBACK_MODEL} "
+              "(car, motorcycle, bus, truck only). Train models/vehicle.pt for all RoadSense types.")
+        cfg.model = FALLBACK_MODEL
+        if not cfg.vehicle_classes:
+            cfg.vehicle_classes = list(COCO_VEHICLE_CLASSES)
+    return cfg
+
+
 def load(path):
     _load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
     with open(path, encoding="utf-8") as fh:
@@ -108,4 +139,4 @@ def load(path):
     cfg = Config(**raw)
     cfg.api_url = os.environ.get("ROADSENSE_API_URL", cfg.api_url)
     cfg.api_key = os.environ.get("ROADSENSE_API_KEY", cfg.api_key)
-    return cfg
+    return resolve_model(cfg)

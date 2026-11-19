@@ -132,7 +132,7 @@
       </select>
     </div>
     {{ input_field("plate", "Plate number", placeholder="ABC 1234", required=true) }}
-    {{ select_field("vehicle_type", "Vehicle type", [('car', 'Car'), ('motorcycle', 'Motorcycle'), ('other', 'Other')]) }}
+    {{ select_field("vehicle_type", "Vehicle type", vehicle_type_choices) }}
     <div class="edu-modal-foot">
       <button type="button" class="btn btn-outline" id="cancel-add-vehicle">Cancel</button>
       {{ button("Add & verify vehicle", variant="primary") }}

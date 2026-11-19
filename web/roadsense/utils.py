@@ -54,7 +54,17 @@ def normalize_plate(text):
     return re.sub(r"[^A-Z0-9]", "", (text or "").upper())
 
 
-VEHICLE_CLASSES = ("car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "pickup", "multicab")
+VEHICLE_CLASSES = ("car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "multicab")
+
+# Types a driver or the office can register. Matches what the detector reports, plus "other".
+VEHICLE_TYPES = VEHICLE_CLASSES + ("other",)
+VEHICLE_TYPE_CHOICES = [(t, t.capitalize()) for t in VEHICLE_TYPES]
+
+
+def clean_vehicle_type(value):
+    """Return a known vehicle type, or "car" when the form sent something else."""
+    value = (value or "").strip().lower()
+    return value if value in VEHICLE_TYPES else "car"
 
 
 def format_plate(plate):
@@ -161,6 +171,7 @@ def inject_globals():
         "csrf_token": csrf_token,
         "site_url": base,
         "canonical_url": f"{base}{path}",
+        "vehicle_type_choices": VEHICLE_TYPE_CHOICES,
     }
 
 

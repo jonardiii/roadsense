@@ -122,8 +122,7 @@ def vehicles():
     conn = db.get_db()
     if request.method == "POST":
         plate = utils.normalize_plate(request.form.get("plate", ""))
-        vtype = request.form.get("vehicle_type")
-        vtype = vtype if vtype in ("car", "motorcycle", "other") else "car"
+        vtype = utils.clean_vehicle_type(request.form.get("vehicle_type"))
         if not utils.valid_plate(plate):
             flash("Check the plate number. Use letters and digits, like ABC1234.", "error")
         elif conn.execute("SELECT 1 FROM vehicles WHERE plate = ?", (plate,)).fetchone():

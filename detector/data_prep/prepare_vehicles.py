@@ -4,7 +4,7 @@
    python -m data_prep.prepare_vehicles --inputs data\\big_set --max-images 6000 --out data\\vehicles
 
 Every dataset is a Roboflow export in YOLO format (it has a data.yaml and train/valid folders). The class
-names in each one are matched to these nine: car, van, jeepney, tricycle, motorcycle, bus, truck, pickup,
+names in each one are matched to these eight: car, van, jeepney, tricycle, motorcycle, bus, truck,
 multicab. Add "*3" after a folder (data\\own_frames*3) to use its training images three times: do that for a
 small set of your own labelled frames, so the model pays attention to them.
 Classes that match none of them (bicycle, e-bike, person...) are dropped, and their boxes with them.
@@ -19,7 +19,7 @@ import sys
 
 from data_prep.prepare_dataset import IMAGE_EXT, SPLITS_TRAIN, label_to_box, split_dirs
 
-CLASSES = ["car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "pickup", "multicab"]
+CLASSES = ["car", "van", "jeepney", "tricycle", "motorcycle", "bus", "truck", "multicab"]
 
 # first match wins, so the specific words come first
 RULES = [
@@ -31,8 +31,8 @@ RULES = [
     ("uv express", "van"), ("uv-express", "van"), ("uvexpress", "van"),
     ("minibus", "van"), ("bus", "bus"),
     ("van", "van"), ("l300", "van"), ("urvan", "van"),
-    ("pickup", "pickup"), ("pick-up", "pickup"), ("pick up", "pickup"), ("hilux", "pickup"),
-    ("strada", "pickup"), ("navara", "pickup"),
+    ("pickup", "car"), ("pick-up", "car"), ("pick up", "car"), ("hilux", "car"),
+    ("strada", "car"), ("navara", "car"),
     ("trailer", "truck"), ("flatbed", "truck"), ("truck", "truck"), ("lorry", "truck"),
     ("suv", "car"), ("sedan", "car"), ("hatchback", "car"),
     ("taxi", "car"), ("private", "car"), ("mpv", "car"), ("car", "car"),

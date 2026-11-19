@@ -3,12 +3,15 @@
   "api_key": "PASTE_THE_KEY_FROM_THE_WEB_SETTINGS_PAGE",
   "source": "rtsp://CAMERA_USER:CAMERA_PASSWORD@192.168.1.50:554/stream1",
   "calibration": "calibration.json",
-  "model": "yolo11s.pt",
+  "model": "models/vehicle.pt",
+  "vehicle_classes": [],
   "device": "0",
   "speed_margin_kmh": 0.0,
-  "plate_model": "",
+  "plate_model": "models/plate.pt",
   "min_plate_confidence": 0.6,
-  "horn_enabled": false,
+  "horn_enabled": true,
+  "horn_model": "models/yamnet.onnx",
+  "horn_head": "models/horn_head.npz",
   "audio_device": "",
   "video_lag_s": 1.0
 }
